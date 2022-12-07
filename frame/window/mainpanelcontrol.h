@@ -6,12 +6,18 @@
 #define MAINPANELCONTROL_H
 
 #include "constants.h"
-
+#include <DWidget>
 #include <QWidget>
 
 #include <com_deepin_daemon_gesture.h>
-
 using namespace Dock;
+
+DWIDGET_BEGIN_NAMESPACE
+class DArrowRectangle;
+class DIconButton;
+DWIDGET_END_NAMESPACE
+
+DWIDGET_USE_NAMESPACE
 
 class QBoxLayout;
 class QLabel;
@@ -63,7 +69,7 @@ private:
     DockItem *dropTargetItem(DockItem *sourceItem, QPoint point);
     void moveItem(DockItem *sourceItem, DockItem *targetItem);
     void handleDragMove(QDragMoveEvent *e, bool isFilter);
-    void calcuDockIconSize(int w, int h, int traySize);
+    void calcuDockIconSize(int appItemSize, int iconCount, int traySize);
     void resizeDesktopWidget();
     bool checkNeedShowDesktop();
     bool appIsOnDock(const QString &appDesktop);
@@ -82,21 +88,29 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
+    DIconButton *m_overflowLBtn;
+    DIconButton *m_overflowButton;    // show m_overflow
+    DArrowRectangle *m_overflowArea;  // overflow area
+    QBoxLayout *m_overflowAreaLayout; // overflow layout
+    DIconButton *m_overflowRBtn;
+    int overflowIndex = -1; // if started is -1, then not show tow btn
+
     QBoxLayout *m_mainPanelLayout;
 
-    QWidget *m_fixedAreaWidget;     // 固定区域
-    QBoxLayout *m_fixedAreaLayout;  //
-    QLabel *m_fixedSpliter;         // 固定区域与应用区域间的分割线
-    QWidget *m_appAreaWidget;       // 应用区域
-    QWidget *m_appAreaSonWidget;    // 子应用区域，所在位置根据显示模式手动指定
-    QBoxLayout *m_appAreaSonLayout; //
-    QLabel *m_appSpliter;           // 应用区域与托盘区域间的分割线
-    QWidget *m_trayAreaWidget;      // 托盘区域
-    QBoxLayout *m_trayAreaLayout;   //
-    QLabel *m_traySpliter;          // 托盘区域与插件区域间的分割线
-    QWidget *m_pluginAreaWidget;    // 插件区域
-    QBoxLayout *m_pluginLayout;     //
-    DesktopWidget *m_desktopWidget; // 桌面预览区域
+    QWidget *m_fixedAreaWidget;      // 固定区域
+    QBoxLayout *m_fixedAreaLayout;   //
+    QLabel *m_fixedSpliter;          // 固定区域与应用区域间的分割线
+    QWidget *m_appAreaWidget;        // 应用区域
+                                     //
+    QWidget *m_appAreaSonWidget;     // 子应用区域，所在位置根据显示模式手动指定
+    QBoxLayout *m_appAreaSonLayout;  //
+    QLabel *m_appSpliter;            // 应用区域与托盘区域间的分割线
+    QWidget *m_trayAreaWidget;       // 托盘区域
+    QBoxLayout *m_trayAreaLayout;    //
+    QLabel *m_traySpliter;           // 托盘区域与插件区域间的分割线
+    QWidget *m_pluginAreaWidget;     // 插件区域
+    QBoxLayout *m_pluginLayout;      //
+    DesktopWidget *m_desktopWidget;  // 桌面预览区域
 
     Position m_position;
     QPointer<PlaceholderItem> m_placeholderItem;
@@ -105,9 +119,9 @@ private:
     DisplayMode m_dislayMode;
     QPoint m_mousePressPos;
     TrayPluginItem *m_tray;
-    int m_dragIndex = -1;   // 记录应用区域被拖拽图标的位置
+    int m_dragIndex = -1;  // 记录应用区域被拖拽图标的位置
 
-    PluginsItem *m_trashItem;       // 垃圾箱插件（需要特殊处理一下）
+    PluginsItem *m_trashItem;  // 垃圾箱插件（需要特殊处理一下）
 };
 
-#endif // MAINPANELCONTROL_H
+#endif  // MAINPANELCONTROL_H
