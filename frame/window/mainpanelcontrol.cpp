@@ -122,6 +122,14 @@ void MainPanelControl::initUI()
                 break;
         }
     };
+    connect(m_overflowLBtn, &QPushButton::clicked, this , [this] {
+        overflowIndex -= 1;
+        resizeDockIcon();
+    });
+    connect(m_overflowRBtn, &QPushButton::clicked, this , [this] {
+        overflowIndex +=1;
+        resizeDockIcon();
+    });
     connect(m_overflowButton, &QPushButton::clicked, this, [this, overflowbuttonIconSet] {
         if (m_overflowArea->isHidden()) {
             //QPoint p = m_overflowButton->pos();
@@ -1156,10 +1164,10 @@ void MainPanelControl::resizeDockIcon()
     totalLength -= tray_item_size * pluginCount;
 
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
-        int appiconCount = totalLength / (height() + 10) ;
+        int appiconCount = totalLength / (height() + 20) ;
         calcuDockIconSize(height(), appiconCount, tray_item_size);
     } else {
-        int appiconCount = totalLength  / (width() + 10) ;
+        int appiconCount = totalLength  / (width() + 20) ;
         calcuDockIconSize(width(), appiconCount, tray_item_size);
     }
 }
@@ -1205,12 +1213,14 @@ void MainPanelControl::calcuDockIconSize(int appItemSize,  int maxcount, int tra
                 child->setFixedSize(appItemSize / 2 , appItemSize / 2 );
                 child->setParent(m_overflowArea);
                 m_overflowAreaLayout->insertWidget(1, child);
-                //m_overflowAreaLayout->addWidget(child);
+                //child->setVisible(true);
                 overflowappacount += 1;
             }
         }
     }
+    // TODO: caculate if to show
 
+    // TODO:
     QPoint pos(0, 0);
     int maxlengh;
     const QWidget *w = qobject_cast<QWidget *>(m_overflowButton->parent());
@@ -1229,11 +1239,16 @@ void MainPanelControl::calcuDockIconSize(int appItemSize,  int maxcount, int tra
         m_overflowArea->hide();
     }
 
+    int overflowappacountshow = -1;
 
     switch (m_position) {
         case Dock::Bottom:
         case Dock::Top: {
                 maxlengh = qMin(width(), width()-pos.x()) - 20;
+                int overflowappacount_temp = maxlengh * 1.7 / appItemSize;
+                if (overflowappacount_temp < overflowappacount) {
+                    overflowappacountshow = overflowappacount_temp;
+                }
                 int maxlength2 = overflowappacount * appItemSize / 1.7;
                 int width = qMin(maxlengh, maxlength2);
                 m_overflowArea->setFixedWidth(width);
@@ -1243,13 +1258,30 @@ void MainPanelControl::calcuDockIconSize(int appItemSize,  int maxcount, int tra
         case Dock::Left:
         case Dock::Right: {
                 maxlengh = qMin(height(), height()-pos.y()) - 20;
+                int overflowappacount_temp = maxlengh * 1.7 / appItemSize;
+                if (overflowappacount_temp < overflowappacount) {
+                    overflowappacountshow = overflowappacount_temp;
+                }
                 int maxlength2 = overflowappacount * appItemSize / 1.7;
                 int height = qMin(maxlengh, maxlength2);
-                    m_overflowArea->setFixedHeight(height);
+                m_overflowArea->setFixedHeight(height);
                 m_overflowArea->setFixedWidth(appItemSize / 1.3 );
             }
 
             break;
+    }
+
+    if (overflowappacountshow != -1) {
+        //m_overflowAreaLayout->itemAt(i)->widget()->hide();
+        for (int i = overflowIndex; i < m_overflowAreaLayout->count() - 1 ; i++) {
+            if (i <= overflowIndex && i > 0){
+                m_overflowAreaLayout->itemAt(i)->widget()->setVisible(false);
+            }else if( i> overflowIndex && i <= overflowappacountshow + overflowIndex) {
+                m_overflowAreaLayout->itemAt(i)->widget()->setVisible(true);
+            } else {
+                m_overflowAreaLayout->itemAt(i)->widget()->setVisible(false);
+            }
+        }
     }
 
     if (m_tray) {
