@@ -94,7 +94,7 @@ private:
     DArrowRectangle *m_overflowArea;  // overflow area
     QBoxLayout *m_overflowAreaLayout; // overflow layout
     DIconButton *m_overflowRBtn;
-    int overflowIndex = 1; // if started is -1, then not show tow btn
+    int overflowIndex = -1; // if started is -1, then not show tow btn
 
     QBoxLayout *m_mainPanelLayout;
 
