@@ -5,6 +5,7 @@
 #include "mainpanelcontrol.h"
 #include "appitem.h"
 #include "components/appdrag.h"
+#include "components/overflowcomponent.h"
 #include "constants.h"
 #include "desktop_widget.h"
 #include "dockitem.h"
@@ -53,11 +54,11 @@ const QString go_right = QStringLiteral(":/icons/resources/arrow-right");
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
-    , m_overflowLBtn(new DIconButton(this))
-    , m_overflowButton(new DIconButton(this))
+    , m_overflowLBtn(new OverFlowComponent(go_left,this))
+    , m_overflowButton(new OverFlowComponent(go_up, this))
     , m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
     , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
-    , m_overflowRBtn(new DIconButton(this))
+    , m_overflowRBtn(new OverFlowComponent(go_right,this))
     , m_mainPanelLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_fixedAreaWidget(new QWidget(this))
     , m_fixedAreaLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
@@ -99,38 +100,38 @@ MainPanelControl::MainPanelControl(QWidget *parent)
 
 void MainPanelControl::initUI()
 {
-    m_overflowLBtn->setIcon(QIcon(go_left));
-    m_overflowRBtn->setIcon(QIcon(go_right));
+    m_overflowLBtn->setIcon(go_left);
+    m_overflowRBtn->setIcon(go_right);
     m_overflowAreaLayout->addWidget(m_overflowLBtn, Qt::AlignCenter);
     m_overflowAreaLayout->addWidget(m_overflowRBtn, Qt::AlignCenter);
-    m_overflowButton->setIcon(QIcon(go_up));
+    m_overflowButton->setIcon(go_up);
     m_overflowButton->setVisible(false);
     m_overflowArea->setLayout(m_overflowAreaLayout);
     auto overflowbuttonIconSet = [this](bool show) {
         switch (m_position) {
             case Dock::Top:
-                m_overflowButton->setIcon(show ? QIcon(go_up) : QIcon(go_down));
+                m_overflowButton->setIcon(show ? go_up : go_down);
                 break;
             case Dock::Bottom:
-                m_overflowButton->setIcon(show ? QIcon(go_down) : QIcon(go_up));
+                m_overflowButton->setIcon(show ? go_down : go_up);
                 break;
             case Dock::Left:
-                m_overflowButton->setIcon(show ? QIcon(go_left) : QIcon(go_right));
+                m_overflowButton->setIcon(show ? go_left : go_right);
                 break;
             case Dock::Right:
-                m_overflowButton->setIcon(show ? QIcon(go_right) : QIcon(go_left));
+                m_overflowButton->setIcon(show ? go_right : go_left);
                 break;
         }
     };
-    connect(m_overflowLBtn, &QPushButton::clicked, this , [this] {
+    connect(m_overflowLBtn, &OverFlowComponent::clicked, this , [this] {
         overflowIndex -= 1;
         resizeDockIcon();
     });
-    connect(m_overflowRBtn, &QPushButton::clicked, this , [this] {
+    connect(m_overflowRBtn, &OverFlowComponent::clicked, this , [this] {
         overflowIndex += 1;
         resizeDockIcon();
     });
-    connect(m_overflowButton, &QPushButton::clicked, this, [this, overflowbuttonIconSet] {
+    connect(m_overflowButton, &OverFlowComponent::clicked, this, [this, overflowbuttonIconSet] {
         if (m_overflowArea->isHidden()) {
             //QPoint p = m_overflowButton->pos();
             QPoint p(0,0);
@@ -432,16 +433,24 @@ void MainPanelControl::setPositonValue(Dock::Position position)
     m_overflowArea->hide();
     switch (position) {
         case Dock::Top:
-            m_overflowButton->setIcon(QIcon(go_down));
+            m_overflowButton->setIcon(go_down);
+            m_overflowLBtn->setIcon(go_left);
+            m_overflowRBtn->setIcon(go_right);
             break;
         case Dock::Bottom:
-            m_overflowButton->setIcon(QIcon(go_up));
+            m_overflowButton->setIcon(go_up);
+            m_overflowLBtn->setIcon(go_left);
+            m_overflowRBtn->setIcon(go_right);
             break;
         case Dock::Left:
-            m_overflowButton->setIcon(QIcon(go_right));
+            m_overflowButton->setIcon(go_right);
+            m_overflowLBtn->setIcon(go_down);
+            m_overflowRBtn->setIcon(go_up);
             break;
         case Dock::Right:
-            m_overflowButton->setIcon(QIcon(go_left));
+            m_overflowButton->setIcon(go_left);
+            m_overflowLBtn->setIcon(go_down);
+            m_overflowRBtn->setIcon(go_up);
             break;
     }
     m_position = position;
@@ -1085,6 +1094,7 @@ void MainPanelControl::paintEvent(QPaintEvent *event)
  */
 
 // TODO: caculate appitem on resizeDockIcon
+// TODO: 条件判断要在这里判断
 void MainPanelControl::resizeDockIcon()
 {
     // 总宽度
@@ -1233,12 +1243,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
     if (overflowappacount > 0) {
         overflowappacount += 2;
         m_overflowButton->setVisible(true);
-        // FIXME: ?
-        if (m_appAreaSonLayout->children().count() == 0) {
-            m_appAreaSonLayout->addWidget(m_overflowButton);
-        } else {
-            addAppAreaItem(-1, m_overflowButton);
-        }
+        addAppAreaItem(-1, m_overflowButton);
         int overflowappacountshow = 0;
         switch (m_position) {
             case Dock::Bottom:
@@ -1292,6 +1297,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
         }
     } else {
         m_overflowButton->setVisible(false);
+        m_overflowButton->setFixedSize(appItemSize, appItemSize);
         m_overflowArea->hide();
     }
 
