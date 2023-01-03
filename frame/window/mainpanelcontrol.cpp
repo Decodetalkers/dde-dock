@@ -46,10 +46,10 @@
 
 DWIDGET_USE_NAMESPACE
 
-const QString go_up = QStringLiteral("go-up");
-const QString go_down = QStringLiteral("go-down");
-const QString go_left = QStringLiteral("go-left");
-const QString go_right = QStringLiteral("go-right");
+const QString go_up = QStringLiteral(":/icons/resources/arrow-up");
+const QString go_down = QStringLiteral(":/icons/resources/arrow-down");
+const QString go_left = QStringLiteral(":/icons/resources/arrow-left");
+const QString go_right = QStringLiteral(":/icons/resources/arrow-right");
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
@@ -99,26 +99,26 @@ MainPanelControl::MainPanelControl(QWidget *parent)
 
 void MainPanelControl::initUI()
 {
-    m_overflowLBtn->setIcon(QIcon::fromTheme(go_left));
-    m_overflowRBtn->setIcon(QIcon::fromTheme(go_right));
+    m_overflowLBtn->setIcon(QIcon(go_left));
+    m_overflowRBtn->setIcon(QIcon(go_right));
     m_overflowAreaLayout->addWidget(m_overflowLBtn, Qt::AlignCenter);
     m_overflowAreaLayout->addWidget(m_overflowRBtn, Qt::AlignCenter);
-    m_overflowButton->setIcon(QIcon::fromTheme(go_up));
+    m_overflowButton->setIcon(QIcon(go_up));
     m_overflowButton->setVisible(false);
     m_overflowArea->setLayout(m_overflowAreaLayout);
     auto overflowbuttonIconSet = [this](bool show) {
         switch (m_position) {
             case Dock::Top:
-                m_overflowButton->setIcon(show ? QIcon::fromTheme(go_up) : QIcon::fromTheme(go_down));
+                m_overflowButton->setIcon(show ? QIcon(go_up) : QIcon(go_down));
                 break;
             case Dock::Bottom:
-                m_overflowButton->setIcon(show ? QIcon::fromTheme(go_down) : QIcon::fromTheme(go_up));
+                m_overflowButton->setIcon(show ? QIcon(go_down) : QIcon(go_up));
                 break;
             case Dock::Left:
-                m_overflowButton->setIcon(show ? QIcon::fromTheme(go_left) : QIcon::fromTheme(go_right));
+                m_overflowButton->setIcon(show ? QIcon(go_left) : QIcon(go_right));
                 break;
             case Dock::Right:
-                m_overflowButton->setIcon(show ? QIcon::fromTheme(go_right) : QIcon::fromTheme(go_left));
+                m_overflowButton->setIcon(show ? QIcon(go_right) : QIcon(go_left));
                 break;
         }
     };
@@ -147,7 +147,7 @@ void MainPanelControl::initUI()
                     m_overflowAreaLayout->setDirection(QBoxLayout::RightToLeft);
                     m_overflowArea->setArrowDirection(DArrowRectangle::ArrowTop);
                     pp.setY(p.y() *2);
-                    pp += QPoint(r.width() / 2, r.height());
+                    pp += QPoint(r.width() / 2,  r.height());
                     break;
                 case Dock::Bottom:
                     m_overflowAreaLayout->setDirection(QBoxLayout::RightToLeft);
@@ -432,16 +432,16 @@ void MainPanelControl::setPositonValue(Dock::Position position)
     m_overflowArea->hide();
     switch (position) {
         case Dock::Top:
-            m_overflowButton->setIcon(QIcon::fromTheme(go_down));
+            m_overflowButton->setIcon(QIcon(go_down));
             break;
         case Dock::Bottom:
-            m_overflowButton->setIcon(QIcon::fromTheme(go_up));
+            m_overflowButton->setIcon(QIcon(go_up));
             break;
         case Dock::Left:
-            m_overflowButton->setIcon(QIcon::fromTheme(go_right));
+            m_overflowButton->setIcon(QIcon(go_right));
             break;
         case Dock::Right:
-            m_overflowButton->setIcon(QIcon::fromTheme(go_left));
+            m_overflowButton->setIcon(QIcon(go_left));
             break;
     }
     m_position = position;
