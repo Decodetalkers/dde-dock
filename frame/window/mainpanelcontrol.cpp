@@ -1171,19 +1171,50 @@ void MainPanelControl::resizeDockIcon()
     // 计算溢出逻辑时候减去固定区域的内容
     totalLength -= m_fixedAreaLayout->count() * tray_item_size;
 
+    // caculate twice is to get real count of overflow apps
+    // and get real count apps on 
+    auto get_real_count = [&](int maxcount) -> QPair<int, int> {
+        int type = 0;
+        int index = 0;
+        int overflowappacount = 0;
+        for (auto child : DockItemManager::instance()->itemList()) {
+            if (child->itemType() == DockItem::ItemType::App) {
+                if (index < maxcount -1) {
+                    index += 1;
+                } else {
+                    overflowappacount += 1;
+                }
+            }
+        }
+        if (overflowappacount != 0){
+            maxcount -= 1;
+            if (maxcount == 1) {
+                type = 1;
+            } else {
+                //maxcount -=1;
+                // INFO: this meens need to put two icon
+                //type = 2;
+                type = 1;
+            }
+        }
+        return QPair<int, int>(maxcount, type);
+    };
+
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
         int appiconCount = totalLength / height();
-        calcuDockIconSize(height(), appiconCount, tray_item_size);
+        QPair<int ,int> realappiconCount = get_real_count(appiconCount);
+        calcuDockIconSize(height(), realappiconCount.first, realappiconCount.second, tray_item_size);
     } else {
         int appiconCount = totalLength  / width();
-        calcuDockIconSize(width(), appiconCount, tray_item_size);
+        QPair<int ,int> realappiconCount = get_real_count(appiconCount);
+        calcuDockIconSize(width(), realappiconCount.first, realappiconCount.second, tray_item_size);
     }
 }
 
 // FIXME: ONLY USE HEIGHT
 // FIXME: here to fix the logic , now over flow should be hide
 // FIXME: Move to another place
-void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int traySize)
+void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
 {
 
     // set origin one size
@@ -1219,12 +1250,11 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
             }
         } else {
             if (child->itemType() == DockItem::ItemType::App) {
-                child->setFixedSize(appItemSize / 2 , appItemSize / 2 );
-                m_overflowLBtn->setFixedSize(appItemSize / 2, appItemSize /2);
-                m_overflowRBtn->setFixedSize(appItemSize / 2, appItemSize /2);
+                child->setFixedSize(appItemSize , appItemSize);
+                m_overflowLBtn->setFixedSize(appItemSize , appItemSize);
+                m_overflowRBtn->setFixedSize(appItemSize , appItemSize);
                 child->setParent(m_overflowArea);
                 m_overflowAreaLayout->insertWidget(1, child, 0, Qt::AlignCenter);
-                //child->setVisible(true);
                 overflowappacount += 1;
             }
         }
@@ -1240,9 +1270,10 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
     pos += m_overflowButton->pos();
 
     // 如果有溢出區
-    if (overflowappacount > 0) {
+    if (showtype == 1) {
         overflowappacount += 2;
         m_overflowButton->setVisible(true);
+        m_overflowButton->setFixedSize(appItemSize, appItemSize);
         addAppAreaItem(-1, m_overflowButton);
         int overflowappacountshow = 0;
         switch (m_position) {
@@ -1251,8 +1282,8 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
                     // 对比宽度和二分长度
                     // 但是这样依旧是有逻辑问题的
                     // 对比到左边距离和到右边距离，得到最大的宽度
-                    maxlength = qMin(pos.x() * 2, (width()-pos.x()) * 2) - 40;
-                    int overflowappacount_temp = maxlength * 2 / appItemSize;
+                    maxlength = qMin(pos.x() * 2, (width()-pos.x()) * 2) - 100;
+                    int overflowappacount_temp = maxlength  / appItemSize;
                     if (overflowappacount_temp < overflowappacount) {
                         overflowappacountshow = overflowappacount_temp;
                     }
@@ -1260,8 +1291,8 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int tray
                 break;
             case Dock::Left:
             case Dock::Right: {
-                    maxlength = qMin(pos.y() * 2, (height()-pos.y()) * 2) - 40;
-                    int overflowappacount_temp = maxlength * 2 / appItemSize;
+                    maxlength = qMin(pos.y() * 2, (height()-pos.y()) * 2) - 100;
+                    int overflowappacount_temp = maxlength / appItemSize;
                     if (overflowappacount_temp < overflowappacount) {
                         overflowappacountshow = overflowappacount_temp;
                     }

@@ -71,7 +71,7 @@ private:
     DockItem *dropTargetItem(DockItem *sourceItem, QPoint point);
     void moveItem(DockItem *sourceItem, DockItem *targetItem);
     void handleDragMove(QDragMoveEvent *e, bool isFilter);
-    void calcuDockIconSize(int appItemSize, int iconCount, int traySize);
+    void calcuDockIconSize(int appItemSize, int maxcount ,int showtype, int traySize);
     void resizeDesktopWidget();
     bool checkNeedShowDesktop();
     bool appIsOnDock(const QString &appDesktop);
