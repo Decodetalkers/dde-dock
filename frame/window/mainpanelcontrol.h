@@ -91,6 +91,7 @@ protected:
 
 private:
     OverFlowComponent *m_overflowLBtn;
+    OverFlowComponent *m_stayApp;
     OverFlowComponent *m_overflowButton;    // show m_overflow
     DArrowRectangle *m_overflowArea;  // overflow area
     QBoxLayout *m_overflowAreaLayout; // overflow layout

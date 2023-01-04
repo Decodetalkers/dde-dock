@@ -51,10 +51,12 @@ const QString go_up = QStringLiteral(":/icons/resources/arrow-up");
 const QString go_down = QStringLiteral(":/icons/resources/arrow-down");
 const QString go_left = QStringLiteral(":/icons/resources/arrow-left");
 const QString go_right = QStringLiteral(":/icons/resources/arrow-right");
+const QString app_image = QStringLiteral(":/icons/resources/application-x-desktop");
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
     , m_overflowLBtn(new OverFlowComponent(go_left,this))
+    , m_stayApp(new OverFlowComponent(app_image, this))
     , m_overflowButton(new OverFlowComponent(go_up, this))
     , m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
     , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
@@ -106,6 +108,7 @@ void MainPanelControl::initUI()
     m_overflowAreaLayout->addWidget(m_overflowRBtn, Qt::AlignCenter);
     m_overflowButton->setIcon(go_up);
     m_overflowButton->setVisible(false);
+    m_stayApp->setVisible(false);
     m_overflowArea->setLayout(m_overflowAreaLayout);
     auto overflowbuttonIconSet = [this](bool show) {
         switch (m_position) {
@@ -1188,12 +1191,11 @@ void MainPanelControl::resizeDockIcon()
         }
         if (overflowappacount != 0){
             maxcount -= 1;
-            if (maxcount == 1) {
-                type = 1;
-            } else {
-                //maxcount -=1;
+            if (maxcount >= 2) {
                 // INFO: this meens need to put two icon
-                //type = 2;
+                maxcount -=1;
+                type = 2;
+            } else {
                 type = 1;
             }
         }
@@ -1270,11 +1272,18 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     pos += m_overflowButton->pos();
 
     // 如果有溢出區
-    if (showtype == 1) {
+    if (showtype != 0) {
         overflowappacount += 2;
         m_overflowButton->setVisible(true);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);
         addAppAreaItem(-1, m_overflowButton);
+        if (showtype == 2) {
+            m_stayApp->setVisible(true);
+            m_stayApp->setFixedSize(appItemSize, appItemSize);
+            addAppAreaItem(-1, m_stayApp);
+        } else {
+            m_stayApp->setVisible(false);
+        }
         int overflowappacountshow = 0;
         switch (m_position) {
             case Dock::Bottom:
@@ -1328,6 +1337,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         }
     } else {
         m_overflowButton->setVisible(false);
+        m_stayApp->setVisible(false);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);
         m_overflowArea->hide();
     }
