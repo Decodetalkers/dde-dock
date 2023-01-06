@@ -19,6 +19,7 @@ DWIDGET_END_NAMESPACE
 
 DWIDGET_USE_NAMESPACE
 
+class QScrollArea;
 class QBoxLayout;
 class QLabel;
 class TrayPluginItem;
@@ -90,13 +91,14 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    OverFlowComponent *m_overflowLBtn;
+    //OverFlowComponent *m_overflowLBtn;
     OverFlowComponent *m_stayApp;
     OverFlowComponent *m_overflowButton;    // show m_overflow
     DArrowRectangle *m_overflowArea;  // overflow area
+    QScrollArea *m_overflowScrollArea;
     QBoxLayout *m_overflowAreaLayout; // overflow layout
-    OverFlowComponent *m_overflowRBtn;
-    int overflowIndex = -1; // if started is -1, then not show tow btn
+    //OverFlowComponent *m_overflowRBtn;
+    //int overflowIndex = -1; // if started is -1, then not show tow btn
 
     QBoxLayout *m_mainPanelLayout;
 

@@ -55,12 +55,11 @@ const QString app_image = QStringLiteral(":/icons/resources/application-x-deskto
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
-    , m_overflowLBtn(new OverFlowComponent(go_left,this))
     , m_stayApp(new OverFlowComponent(app_image, this))
     , m_overflowButton(new OverFlowComponent(go_up, this))
     , m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
+    , m_overflowScrollArea(new QScrollArea)
     , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
-    , m_overflowRBtn(new OverFlowComponent(go_right,this))
     , m_mainPanelLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_fixedAreaWidget(new QWidget(this))
     , m_fixedAreaLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
@@ -106,10 +105,6 @@ MainPanelControl::MainPanelControl(QWidget *parent)
 
 void MainPanelControl::initUI()
 {
-    m_overflowLBtn->setIcon(go_left);
-    m_overflowRBtn->setIcon(go_right);
-    m_overflowAreaLayout->addWidget(m_overflowLBtn, Qt::AlignCenter);
-    m_overflowAreaLayout->addWidget(m_overflowRBtn, Qt::AlignCenter);
     m_overflowButton->setIcon(go_up);
     m_overflowButton->setVisible(false);
     m_stayApp->setVisible(false);
@@ -130,14 +125,7 @@ void MainPanelControl::initUI()
                 break;
         }
     };
-    connect(m_overflowLBtn, &OverFlowComponent::clicked, this , [this] {
-        overflowIndex -= 1;
-        resizeDockIcon();
-    });
-    connect(m_overflowRBtn, &OverFlowComponent::clicked, this , [this] {
-        overflowIndex += 1;
-        resizeDockIcon();
-    });
+
     connect(m_overflowButton, &OverFlowComponent::clicked, this, [this, overflowbuttonIconSet] {
         if (m_overflowArea->isHidden()) {
             //QPoint p = m_overflowButton->pos();
@@ -458,23 +446,15 @@ void MainPanelControl::setPositonValue(Dock::Position position)
     switch (position) {
         case Dock::Top:
             m_overflowButton->setIcon(go_down);
-            m_overflowLBtn->setIcon(go_left);
-            m_overflowRBtn->setIcon(go_right);
             break;
         case Dock::Bottom:
             m_overflowButton->setIcon(go_up);
-            m_overflowLBtn->setIcon(go_left);
-            m_overflowRBtn->setIcon(go_right);
             break;
         case Dock::Left:
             m_overflowButton->setIcon(go_right);
-            m_overflowLBtn->setIcon(go_down);
-            m_overflowRBtn->setIcon(go_up);
             break;
         case Dock::Right:
             m_overflowButton->setIcon(go_left);
-            m_overflowLBtn->setIcon(go_down);
-            m_overflowRBtn->setIcon(go_up);
             break;
     }
     m_position = position;
@@ -1265,7 +1245,6 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     auto children = DockItemManager::instance()->itemList();
 
     int index = 0;
-    int overflowappacount = 0;
 
     // caculate count
     for (auto child : children) {
@@ -1280,28 +1259,18 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         } else {
             if (child->itemType() == DockItem::ItemType::App) {
                 child->setFixedSize(appItemSize , appItemSize);
-                m_overflowLBtn->setFixedSize(appItemSize , appItemSize);
-                m_overflowRBtn->setFixedSize(appItemSize , appItemSize);
+                //m_overflowLBtn->setFixedSize(appItemSize , appItemSize);
+                //m_overflowRBtn->setFixedSize(appItemSize , appItemSize);
                 child->setParent(m_overflowArea);
-                m_overflowAreaLayout->insertWidget(1, child, 0, Qt::AlignCenter);
-                overflowappacount += 1;
+                m_overflowAreaLayout->insertWidget(0, child, 0, Qt::AlignCenter);
+                //overflowappacount += 1;
             }
         }
     }
 
-    QPoint pos(0, 0);
-    int maxlength;
-    const QWidget *w = qobject_cast<QWidget *>(m_overflowButton->parent());
-    while (w) {
-        pos += w->pos();
-        w = qobject_cast<QWidget *>(w->parent());
-    }
-    pos += m_overflowButton->pos();
 
     // 如果有溢出區
     if (showtype != 0) {
-        overflowappacount += 2;
-        //m_overflowSpliter->setVisible(true);
         m_overflowButton->setVisible(true);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);
         //addAppAreaItem(-1, m_overflowButton);
@@ -1312,59 +1281,8 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         } else {
             m_stayApp->setVisible(false);
         }
-        int overflowappacountshow = 0;
-        switch (m_position) {
-            case Dock::Bottom:
-            case Dock::Top: {
-                    // 对比宽度和二分长度
-                    // 但是这样依旧是有逻辑问题的
-                    // 对比到左边距离和到右边距离，得到最大的宽度
-                    maxlength = qMin(pos.x() * 2, (width()-pos.x()) * 2) - 100;
-                    int overflowappacount_temp = maxlength  / appItemSize;
-                    if (overflowappacount_temp < overflowappacount) {
-                        overflowappacountshow = overflowappacount_temp;
-                    }
-                }
-                break;
-            case Dock::Left:
-            case Dock::Right: {
-                    maxlength = qMin(pos.y() * 2, (height()-pos.y()) * 2) - 100;
-                    int overflowappacount_temp = maxlength / appItemSize;
-                    if (overflowappacount_temp < overflowappacount) {
-                        overflowappacountshow = overflowappacount_temp;
-                    }
-                }
 
-                break;
-        }
-
-        if (overflowIndex < 0) {
-            overflowIndex = 0;
-        } else if (overflowIndex + overflowappacountshow  > m_overflowAreaLayout->count() - 1 ) {
-            overflowIndex = m_overflowAreaLayout->count() - 1 -overflowappacountshow;
-        }
-
-        if (overflowappacountshow != 0) {
-            for (int i = overflowIndex; i < m_overflowAreaLayout->count() - 1 ; i++) {
-                if (i <= overflowIndex && i > 0) {
-                    m_overflowAreaLayout->itemAt(i)->widget()->setVisible(false);
-                } else if( i> overflowIndex && i < overflowappacountshow + overflowIndex) {
-                    m_overflowAreaLayout->itemAt(i)->widget()->setVisible(true);
-                } else {
-                    m_overflowAreaLayout->itemAt(i)->widget()->setVisible(false);
-                }
-            }
-            m_overflowLBtn->setVisible(true);
-            m_overflowRBtn->setVisible(true);
-        } else {
-            for(int i = 1; i< m_overflowAreaLayout->count() - 1; i++) {
-                m_overflowAreaLayout->itemAt(i)->widget()->setVisible(true);
-            }
-            m_overflowLBtn->setVisible(false);
-            m_overflowRBtn->setVisible(false);
-        }
     } else {
-        //m_overflowSpliter->setVisible(false);
         m_overflowButton->setVisible(false);
         m_stayApp->setVisible(false);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);
