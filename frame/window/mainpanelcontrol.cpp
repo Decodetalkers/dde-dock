@@ -69,6 +69,9 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     , m_appAreaSonWidget(new QWidget(this))
     , m_appAreaSonLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_appSpliter(new QLabel(this))
+    , m_appOverflowWidget(new QWidget(this))
+    , m_appOverflowLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
+    , m_overflowSpliter(new QLabel)
     , m_trayAreaWidget(new QWidget(this))
     , m_trayAreaLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_traySpliter(new QLabel(this))
@@ -96,6 +99,7 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     // 在设置每条线大小前，应该设置fixedsize(0,0)
     // 应为paintEvent函数会先调用设置背景颜色，大小为随机值
     m_fixedSpliter->setFixedSize(0, 0);
+    m_overflowSpliter->setFixedSize(0, 0);
     m_appSpliter->setFixedSize(0, 0);
     m_traySpliter->setFixedSize(0, 0);
 }
@@ -180,6 +184,8 @@ void MainPanelControl::initUI()
             m_overflowArea->hide();
         }
     });
+    m_appOverflowLayout->addWidget(m_overflowButton);
+    m_appOverflowLayout->addWidget(m_stayApp);
     /* 固定区域 */
     m_fixedAreaWidget->setObjectName("fixedarea");
     m_fixedAreaWidget->setLayout(m_fixedAreaLayout);
@@ -200,6 +206,16 @@ void MainPanelControl::initUI()
 
     m_appSpliter->setObjectName("spliter_app");
     m_mainPanelLayout->addWidget(m_appSpliter);
+
+    /* overflow zone */
+    m_appOverflowWidget->setAccessibleName("AppOverFlowArea");
+    m_appOverflowWidget->setLayout(m_appOverflowLayout);
+    m_appOverflowLayout->setSpacing(0);
+    m_appOverflowLayout->setContentsMargins(0, 0, 0, 0);
+    m_mainPanelLayout->addWidget(m_appOverflowWidget, 0, Qt::AlignCenter);
+
+    m_overflowSpliter->setObjectName("spliter_overflow");
+    m_mainPanelLayout->addWidget(m_overflowSpliter);
 
     /* 托盘区域 */
     m_trayAreaWidget->setObjectName("trayarea");
@@ -226,6 +242,7 @@ void MainPanelControl::initUI()
     m_mainPanelLayout->setContentsMargins(0, 0, 0, 0);
     m_mainPanelLayout->setAlignment(m_fixedSpliter, Qt::AlignCenter);
     m_mainPanelLayout->setAlignment(m_appSpliter, Qt::AlignCenter);
+    m_mainPanelLayout->setAlignment(m_overflowSpliter, Qt::AlignCenter);
     m_mainPanelLayout->setAlignment(m_traySpliter, Qt::AlignCenter);
 }
 
@@ -250,11 +267,13 @@ void MainPanelControl::updateMainPanelLayout()
         case Position::Top:
         case Position::Bottom:
             m_fixedAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+            m_appOverflowWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
             m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             m_trayAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
             m_mainPanelLayout->setDirection(QBoxLayout::LeftToRight);
             m_fixedAreaLayout->setDirection(QBoxLayout::LeftToRight);
+            m_appOverflowLayout->setDirection(QBoxLayout::LeftToRight);
             m_pluginLayout->setDirection(QBoxLayout::LeftToRight);
             m_trayAreaLayout->setDirection(QBoxLayout::LeftToRight);
             m_appAreaSonLayout->setDirection(QBoxLayout::LeftToRight);
@@ -264,11 +283,13 @@ void MainPanelControl::updateMainPanelLayout()
         case Position::Right:
         case Position::Left:
             m_fixedAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+            m_appOverflowWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
             m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
             m_trayAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
             m_mainPanelLayout->setDirection(QBoxLayout::TopToBottom);
             m_fixedAreaLayout->setDirection(QBoxLayout::TopToBottom);
+            m_appOverflowLayout->setDirection(QBoxLayout::TopToBottom);
             m_pluginLayout->setDirection(QBoxLayout::TopToBottom);
             m_trayAreaLayout->setDirection(QBoxLayout::TopToBottom);
             m_appAreaSonLayout->setDirection(QBoxLayout::TopToBottom);
@@ -1089,6 +1110,10 @@ void MainPanelControl::paintEvent(QPaintEvent *event)
     painter.fillRect(m_fixedSpliter->geometry(), color);
     painter.fillRect(m_appSpliter->geometry(), color);
     painter.fillRect(m_traySpliter->geometry(), color);
+    //if (m_overflowSpliter->isEnabled()) {
+    // TODO: hide it when not show
+    painter.fillRect(m_overflowSpliter->geometry(), color);
+    //}
 }
 
 // TODO: caculate the length
@@ -1228,10 +1253,12 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         m_fixedSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
         m_appSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
         m_traySpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.5));
+        m_overflowSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
     } else {
         m_fixedSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
         m_appSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
         m_traySpliter->setFixedSize(int(appItemSize * 0.5), SPLITER_SIZE);
+        m_overflowSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
     }
 
     // get all children
@@ -1274,13 +1301,14 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     // 如果有溢出區
     if (showtype != 0) {
         overflowappacount += 2;
+        //m_overflowSpliter->setVisible(true);
         m_overflowButton->setVisible(true);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);
-        addAppAreaItem(-1, m_overflowButton);
+        //addAppAreaItem(-1, m_overflowButton);
         if (showtype == 2) {
             m_stayApp->setVisible(true);
             m_stayApp->setFixedSize(appItemSize, appItemSize);
-            addAppAreaItem(-1, m_stayApp);
+            //addAppAreaItem(-1, m_stayApp);
         } else {
             m_stayApp->setVisible(false);
         }
@@ -1336,6 +1364,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
             m_overflowRBtn->setVisible(false);
         }
     } else {
+        //m_overflowSpliter->setVisible(false);
         m_overflowButton->setVisible(false);
         m_stayApp->setVisible(false);
         m_overflowButton->setFixedSize(appItemSize, appItemSize);

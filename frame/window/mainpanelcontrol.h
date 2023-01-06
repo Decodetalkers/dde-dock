@@ -108,6 +108,11 @@ private:
     QWidget *m_appAreaSonWidget;     // 子应用区域，所在位置根据显示模式手动指定
     QBoxLayout *m_appAreaSonLayout;  //
     QLabel *m_appSpliter;            // 应用区域与托盘区域间的分割线
+
+    QWidget *m_appOverflowWidget;
+    QBoxLayout *m_appOverflowLayout;
+    QLabel *m_overflowSpliter;
+
     QWidget *m_trayAreaWidget;       // 托盘区域
     QBoxLayout *m_trayAreaLayout;    //
     QLabel *m_traySpliter;           // 托盘区域与插件区域间的分割线
