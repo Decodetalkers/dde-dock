@@ -36,6 +36,7 @@ AppItem::AppItem(const QGSettings *appSettings, const QGSettings *activeAppSetti
     , m_appSettings(appSettings)
     , m_activeAppSettings(activeAppSettings)
     , m_dockedAppSettings(dockedAppSettings)
+    , m_daemonObjectPath(entry)
     , m_appPreviewTips(nullptr)
     , m_itemEntryInter(new DockEntryInter("com.deepin.dde.daemon.Dock", entry.path(), QDBusConnection::sessionBus(), this))
     , m_swingEffectView(nullptr)
@@ -707,4 +708,14 @@ void AppItem::showEvent(QShowEvent *e)
     });
 
     refreshIcon();
+}
+
+AppItem *AppItem::clone(QWidget *parent) {
+    return new AppItem(
+        m_appSettings,
+        m_activeAppSettings,
+        m_dockedAppSettings,
+        m_daemonObjectPath,
+        parent
+    );
 }

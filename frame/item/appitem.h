@@ -42,6 +42,8 @@ public:
     virtual QString accessibleName() override;
     inline quint32 getAppItemWindowId() const { return  m_currentWindowId; }
 
+    AppItem* clone(QWidget *parent);
+
 signals:
     void requestActivateWindow(const WId wid) const;
     void requestPreviewWindow(const WId wid) const;
@@ -91,6 +93,7 @@ private:
     const QGSettings *m_appSettings;
     const QGSettings *m_activeAppSettings;
     const QGSettings *m_dockedAppSettings;
+    const QDBusObjectPath m_daemonObjectPath;
 
     PreviewContainer *m_appPreviewTips;
     DockEntryInter *m_itemEntryInter;

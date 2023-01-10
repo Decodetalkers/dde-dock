@@ -27,6 +27,7 @@
 #include <QStandardPaths>
 #include <QString>
 #include <QTimer>
+#include <QScrollBar>
 #include <QtConcurrent/QtConcurrentRun>
 #include <qpa/qplatformintegration.h>
 #include <qpa/qplatformnativeinterface.h>
@@ -92,6 +93,8 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     m_overflowArea->installEventFilter(this);
     m_appAreaWidget->installEventFilter(this);
     m_appAreaSonWidget->installEventFilter(this);
+    m_overflowArea->installEventFilter(this);
+    m_overflowScrollArea->installEventFilter(this);
     m_trayAreaWidget->installEventFilter(this);
     m_pluginAreaWidget->installEventFilter(this);
 
@@ -108,7 +111,19 @@ void MainPanelControl::initUI()
     m_overflowButton->setIcon(go_up);
     m_overflowButton->setVisible(false);
     m_stayApp->setVisible(false);
-    m_overflowArea->setLayout(m_overflowAreaLayout);
+    m_overflowScrollArea->setWidgetResizable(true);
+    m_overflowScrollArea->setFrameStyle(QFrame::NoFrame);
+    m_overflowScrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+    m_overflowScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_overflowScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    m_overflowScrollArea->setBackgroundRole(QPalette::Base);
+
+    QWidget *scrollCenter = new QWidget;
+    scrollCenter->setAttribute(Qt::WA_TranslucentBackground);
+    scrollCenter->setLayout(m_overflowAreaLayout);
+    //scrollCenter->installEventFilter(this);
+    m_overflowScrollArea->setWidget(scrollCenter);
+    m_overflowArea->setContent(m_overflowScrollArea);
     auto overflowbuttonIconSet = [this](bool show) {
         switch (m_position) {
             case Dock::Top:
@@ -172,8 +187,7 @@ void MainPanelControl::initUI()
             m_overflowArea->hide();
         }
     });
-    m_appOverflowLayout->addWidget(m_overflowButton);
-    m_appOverflowLayout->addWidget(m_stayApp);
+
     /* 固定区域 */
     m_fixedAreaWidget->setObjectName("fixedarea");
     m_fixedAreaWidget->setLayout(m_fixedAreaLayout);
@@ -198,6 +212,8 @@ void MainPanelControl::initUI()
     /* overflow zone */
     m_appOverflowWidget->setAccessibleName("AppOverFlowArea");
     m_appOverflowWidget->setLayout(m_appOverflowLayout);
+    m_appOverflowLayout->addWidget(m_overflowButton);
+    m_appOverflowLayout->addWidget(m_stayApp);
     m_appOverflowLayout->setSpacing(0);
     m_appOverflowLayout->setContentsMargins(0, 0, 0, 0);
     m_mainPanelLayout->addWidget(m_appOverflowWidget, 0, Qt::AlignCenter);
@@ -751,7 +767,32 @@ bool MainPanelControl::eventFilter(QObject *watched, QEvent *event)
                 break;
         }
     }
-
+    // watch overflow layout
+    if (watched == m_overflowScrollArea && event->type() == QEvent::Wheel) {
+        QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
+        const QPoint delta = wheelEvent->angleDelta();
+        int scrolllen = qAbs(delta.x()) > qAbs(delta.y()) ? delta.x() : delta.y(); 
+        if (m_overflowAreaLayout->direction() == QBoxLayout::RightToLeft) {
+            if (m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen <= 0) {
+                m_overflowScrollArea->horizontalScrollBar()->setValue(0);
+            } else if (m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen >=
+                       m_overflowScrollArea->horizontalScrollBar()->maximum()) {
+                m_overflowScrollArea->horizontalScrollBar()->setValue(m_overflowScrollArea->horizontalScrollBar()->maximum());
+            } else {
+                m_overflowScrollArea->horizontalScrollBar()->setValue(m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen);
+            }
+        } else {
+            if (m_overflowScrollArea->verticalScrollBar()->value() + scrolllen <= 0) {
+                m_overflowScrollArea->verticalScrollBar()->setValue(0);
+            } else if (m_overflowScrollArea->verticalScrollBar()->value() + scrolllen >=
+                       m_overflowScrollArea->verticalScrollBar()->maximum()) {
+                m_overflowScrollArea->verticalScrollBar()->setValue(m_overflowScrollArea->verticalScrollBar()->maximum());
+            } else {
+                m_overflowScrollArea->verticalScrollBar()->setValue(m_overflowScrollArea->verticalScrollBar()->value() + scrolllen);
+            }
+        }
+        return true;
+    }
     // fix:88133 在计算icon大小时m_pluginAreaWidget的数据错误
     if (watched == m_pluginAreaWidget) {
         switch (event->type()) {
@@ -1161,23 +1202,23 @@ void MainPanelControl::resizeDockIcon()
     if (iconCount <= 0)
         return;
 
+    int iconSize = ((m_position == Position::Top) || (m_position == Position::Bottom)) ? width() : height();
+
     // 计算插件图标的最大或最小值
-    int tray_item_size = 0;
+    int tray_item_size = qBound(20, iconSize, 40);
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
-        tray_item_size = height() - 40;
+        tray_item_size = qMin(tray_item_size,height());
+        tray_item_size = std::min(tray_item_size, height() - 20);
     } else {
-        tray_item_size = width() - 40;
+        tray_item_size = qMin(tray_item_size,width());
+        tray_item_size = std::min(tray_item_size, width() - 20);
     }
 
     if (tray_item_size < 20)
         tray_item_size = 20;
 
-
     // 减去插件图标的大小后重新计算固定图标和应用图标的平均大小
     totalLength -= tray_item_size * pluginCount;
-
-    // 计算溢出逻辑时候减去固定区域的内容
-    totalLength -= m_fixedAreaLayout->count() * tray_item_size;
 
     // caculate twice is to get real count of overflow apps
     // and get real count apps on 
@@ -1187,7 +1228,7 @@ void MainPanelControl::resizeDockIcon()
         int overflowappacount = 0;
         for (auto child : DockItemManager::instance()->itemList()) {
             if (child->itemType() == DockItem::ItemType::App) {
-                if (index < maxcount -1) {
+                if (index < maxcount) {
                     index += 1;
                 } else {
                     overflowappacount += 1;
@@ -1207,11 +1248,15 @@ void MainPanelControl::resizeDockIcon()
         return QPair<int, int>(maxcount, type);
     };
 
+
+    // FIXME: Somewhere eat my iconcount * 1
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
+        totalLength -= m_fixedAreaLayout->count() * height();
         int appiconCount = totalLength / height();
         QPair<int ,int> realappiconCount = get_real_count(appiconCount);
         calcuDockIconSize(height(), realappiconCount.first, realappiconCount.second, tray_item_size);
     } else {
+        totalLength -= m_fixedAreaLayout->count() * width();
         int appiconCount = totalLength  / width();
         QPair<int ,int> realappiconCount = get_real_count(appiconCount);
         calcuDockIconSize(width(), realappiconCount.first, realappiconCount.second, tray_item_size);
@@ -1245,10 +1290,15 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     auto children = DockItemManager::instance()->itemList();
 
     int index = 0;
-
+    int overflowcount = 0;
+ 
+    //int itemindex = 0;
+    //int maxuseindex = 0;
+    //int maxclicked = 0;
     // caculate count
     for (auto child : children) {
-        if (index < maxcount - 1) {
+        //itemindex += 1;
+        if (index < maxcount) {
             if (child->itemType() == DockItem::ItemType::App) {
                 child->setFixedSize(appItemSize, appItemSize);
                 child->setParent(m_appAreaSonWidget);
@@ -1259,15 +1309,20 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         } else {
             if (child->itemType() == DockItem::ItemType::App) {
                 child->setFixedSize(appItemSize , appItemSize);
-                //m_overflowLBtn->setFixedSize(appItemSize , appItemSize);
-                //m_overflowRBtn->setFixedSize(appItemSize , appItemSize);
                 child->setParent(m_overflowArea);
                 m_overflowAreaLayout->insertWidget(0, child, 0, Qt::AlignCenter);
-                //overflowappacount += 1;
+                overflowcount += 1;
             }
         }
     }
+    //m_stayApp = static_cast<AppItem *>(children[maxuseindex].data())->clone(m_appOverflowWidget);
 
+    int maxwidth = width() - 40;
+    int maxheight = height() - 40;
+    int counticonwidth = overflowcount * appItemSize * 1.3;
+    int counticonheight = overflowcount * appItemSize * 1.3;
+    int realwidth = qMin(maxwidth, counticonwidth);
+    int realheight = qMin(maxheight, counticonheight);
 
     // 如果有溢出區
     if (showtype != 0) {
@@ -1280,6 +1335,18 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
             //addAppAreaItem(-1, m_stayApp);
         } else {
             m_stayApp->setVisible(false);
+        }
+        switch (m_position) {
+            case Dock::Left:
+            case Dock::Right:
+                m_overflowArea->setFixedSize(appItemSize * 1.4 , realheight);
+                m_overflowScrollArea->setFixedSize(appItemSize * 1.4 , realheight);
+                break;
+            case Dock::Top:
+            case Dock::Bottom:
+                m_overflowArea->setFixedSize(realwidth, appItemSize * 1.4);
+                m_overflowScrollArea->setFixedSize(realwidth, appItemSize * 1.4);
+                break;
         }
 
     } else {
