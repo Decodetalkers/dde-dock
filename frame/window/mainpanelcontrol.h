@@ -29,6 +29,8 @@ class PlaceholderItem;
 class AppDragWidget;
 class DesktopWidget;
 class OverFlowComponent;
+class OverflowItem;
+class PlaceholderItem;
 class MainPanelControl : public QWidget
 {
     Q_OBJECT
@@ -92,10 +94,10 @@ protected:
 
 private:
     //OverFlowComponent *m_overflowLBtn;
-    QWidget *m_stayApp;
-    OverFlowComponent *m_overflowButton;    // show m_overflow
-    DArrowRectangle *m_overflowArea;  // overflow area
-    QScrollArea *m_overflowScrollArea;
+    OverflowItem *m_overflowBtn;
+    PlaceholderItem *m_activeApp;    // show m_overflow
+    //DArrowRectangle *m_overflowArea;  // overflow area
+    //QScrollArea *m_overflowScrollArea;
     QBoxLayout *m_overflowAreaLayout; // overflow layout
     //OverFlowComponent *m_overflowRBtn;
     //int overflowIndex = -1; // if started is -1, then not show tow btn

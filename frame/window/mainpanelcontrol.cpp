@@ -11,6 +11,7 @@
 #include "dockitem.h"
 #include "dockitemmanager.h"
 #include "imageutil.h"
+#include "overflowitem.h"
 #include "placeholderitem.h"
 #include "pluginsitem.h"
 #include "touchsignalmanager.h"
@@ -56,10 +57,10 @@ const QString app_image = QStringLiteral(":/icons/resources/application-x-deskto
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
-    , m_stayApp(new OverFlowComponent(app_image, this))
-    , m_overflowButton(new OverFlowComponent(go_up, this))
-    , m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
-    , m_overflowScrollArea(new QScrollArea)
+    , m_overflowBtn(new OverflowItem(this))
+    , m_activeApp(new PlaceholderItem(this))
+    //, m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
+    //, m_overflowScrollArea(new QScrollArea)
     , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
     , m_mainPanelLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_fixedAreaWidget(new QWidget(this))
@@ -90,11 +91,11 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     setAcceptDrops(true);
     setMouseTracking(true);
 
-    m_overflowArea->installEventFilter(this);
+    //m_overflowArea->installEventFilter(this);
     m_appAreaWidget->installEventFilter(this);
     m_appAreaSonWidget->installEventFilter(this);
-    m_overflowArea->installEventFilter(this);
-    m_overflowScrollArea->installEventFilter(this);
+    //m_overflowArea->installEventFilter(this);
+    //m_overflowScrollArea->installEventFilter(this);
     m_trayAreaWidget->installEventFilter(this);
     m_pluginAreaWidget->installEventFilter(this);
 
@@ -108,85 +109,6 @@ MainPanelControl::MainPanelControl(QWidget *parent)
 
 void MainPanelControl::initUI()
 {
-    m_overflowButton->setIcon(go_up);
-    m_overflowButton->setVisible(false);
-    m_stayApp->setVisible(false);
-    m_overflowScrollArea->setWidgetResizable(true);
-    m_overflowScrollArea->setFrameStyle(QFrame::NoFrame);
-    m_overflowScrollArea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    m_overflowScrollArea->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_overflowScrollArea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    m_overflowScrollArea->setBackgroundRole(QPalette::Base);
-
-    QWidget *scrollCenter = new QWidget;
-    scrollCenter->setAttribute(Qt::WA_TranslucentBackground);
-    scrollCenter->setLayout(m_overflowAreaLayout);
-    //scrollCenter->installEventFilter(this);
-    m_overflowScrollArea->setWidget(scrollCenter);
-    m_overflowArea->setContent(m_overflowScrollArea);
-    auto overflowbuttonIconSet = [this](bool show) {
-        switch (m_position) {
-            case Dock::Top:
-                m_overflowButton->setIcon(show ? go_up : go_down);
-                break;
-            case Dock::Bottom:
-                m_overflowButton->setIcon(show ? go_down : go_up);
-                break;
-            case Dock::Left:
-                m_overflowButton->setIcon(show ? go_left : go_right);
-                break;
-            case Dock::Right:
-                m_overflowButton->setIcon(show ? go_right : go_left);
-                break;
-        }
-    };
-
-    connect(m_overflowButton, &OverFlowComponent::clicked, this, [this, overflowbuttonIconSet] {
-        if (m_overflowArea->isHidden()) {
-            //QPoint p = m_overflowButton->pos();
-            QPoint p(0,0);
-            //p.setY(0);
-            const QWidget *w = qobject_cast<QWidget *>(m_overflowButton->parent());
-            while (w) {
-                p += w->pos();
-                w = qobject_cast<QWidget *>(w->parent());
-            }
-            QPoint pp = m_overflowButton->pos();
-            const QRect r = m_overflowButton->rect();
-            switch (m_position) {
-                case Dock::Top:
-                    m_overflowAreaLayout->setDirection(QBoxLayout::RightToLeft);
-                    m_overflowArea->setArrowDirection(DArrowRectangle::ArrowTop);
-                    pp.setY(p.y() *2);
-                    pp += QPoint(r.width() / 2,  r.height());
-                    break;
-                case Dock::Bottom:
-                    m_overflowAreaLayout->setDirection(QBoxLayout::RightToLeft);
-                    m_overflowArea->setArrowDirection(DArrowRectangle::ArrowBottom);
-                    pp.setY(0);
-                    pp += QPoint(r.width() / 2 , 0);
-                    break;
-                case Dock::Left:
-                    m_overflowAreaLayout->setDirection(QBoxLayout::BottomToTop);
-                    m_overflowArea->setArrowDirection(DArrowRectangle::ArrowLeft);
-                    pp.setX(p.x() *2 );
-                    pp += QPoint(r.width(), r.height() / 2);
-                    break;
-                case Dock::Right:
-                    m_overflowAreaLayout->setDirection(QBoxLayout::BottomToTop);
-                    m_overflowArea->setArrowDirection(DArrowRectangle::ArrowRight);
-                    pp.setX(0);
-                    pp += QPoint(0, r.height() / 2 );
-                    break;
-            }
-            overflowbuttonIconSet(true);
-            p += pp;
-            m_overflowArea->show(p.x(), p.y());
-        } else {
-            overflowbuttonIconSet(false);
-            m_overflowArea->hide();
-        }
-    });
 
     /* 固定区域 */
     m_fixedAreaWidget->setObjectName("fixedarea");
@@ -212,8 +134,10 @@ void MainPanelControl::initUI()
     /* overflow zone */
     m_appOverflowWidget->setAccessibleName("AppOverFlowArea");
     m_appOverflowWidget->setLayout(m_appOverflowLayout);
-    m_appOverflowLayout->addWidget(m_overflowButton);
-    m_appOverflowLayout->addWidget(m_stayApp);
+
+    m_overflowBtn->setVisible(false);
+    m_appOverflowLayout->addWidget(m_overflowBtn);
+    m_appOverflowLayout->addWidget(m_activeApp);
     m_appOverflowLayout->setSpacing(0);
     m_appOverflowLayout->setContentsMargins(0, 0, 0, 0);
     m_mainPanelLayout->addWidget(m_appOverflowWidget, 0, Qt::AlignCenter);
@@ -458,21 +382,6 @@ void MainPanelControl::setPositonValue(Dock::Position position)
 {
     if (m_position == position)
         return;
-    m_overflowArea->hide();
-    switch (position) {
-        case Dock::Top:
-            m_overflowButton->setIcon(go_down);
-            break;
-        case Dock::Bottom:
-            m_overflowButton->setIcon(go_up);
-            break;
-        case Dock::Left:
-            m_overflowButton->setIcon(go_right);
-            break;
-        case Dock::Right:
-            m_overflowButton->setIcon(go_left);
-            break;
-    }
     m_position = position;
     QTimer::singleShot(0, this, &MainPanelControl::updateMainPanelLayout);
 }
@@ -767,32 +676,7 @@ bool MainPanelControl::eventFilter(QObject *watched, QEvent *event)
                 break;
         }
     }
-    // watch overflow layout
-    if (watched == m_overflowScrollArea && event->type() == QEvent::Wheel) {
-        QWheelEvent *wheelEvent = static_cast<QWheelEvent *>(event);
-        const QPoint delta = wheelEvent->angleDelta();
-        int scrolllen = qAbs(delta.x()) > qAbs(delta.y()) ? delta.x() : delta.y(); 
-        if (m_overflowAreaLayout->direction() == QBoxLayout::RightToLeft) {
-            if (m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen <= 0) {
-                m_overflowScrollArea->horizontalScrollBar()->setValue(0);
-            } else if (m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen >=
-                       m_overflowScrollArea->horizontalScrollBar()->maximum()) {
-                m_overflowScrollArea->horizontalScrollBar()->setValue(m_overflowScrollArea->horizontalScrollBar()->maximum());
-            } else {
-                m_overflowScrollArea->horizontalScrollBar()->setValue(m_overflowScrollArea->horizontalScrollBar()->value() + scrolllen);
-            }
-        } else {
-            if (m_overflowScrollArea->verticalScrollBar()->value() + scrolllen <= 0) {
-                m_overflowScrollArea->verticalScrollBar()->setValue(0);
-            } else if (m_overflowScrollArea->verticalScrollBar()->value() + scrolllen >=
-                       m_overflowScrollArea->verticalScrollBar()->maximum()) {
-                m_overflowScrollArea->verticalScrollBar()->setValue(m_overflowScrollArea->verticalScrollBar()->maximum());
-            } else {
-                m_overflowScrollArea->verticalScrollBar()->setValue(m_overflowScrollArea->verticalScrollBar()->value() + scrolllen);
-            }
-        }
-        return true;
-    }
+
     // fix:88133 在计算icon大小时m_pluginAreaWidget的数据错误
     if (watched == m_pluginAreaWidget) {
         switch (event->type()) {
@@ -1137,13 +1021,6 @@ void MainPanelControl::paintEvent(QPaintEvent *event)
     //}
 }
 
-// TODO: caculate the length
-/**重新计算任务栏上应用图标、插件图标的大小，并设置
- * @brief MainPanelControl::resizeDockIcon
- */
-
-// TODO: caculate appitem on resizeDockIcon
-// TODO: 条件判断要在这里判断
 void MainPanelControl::resizeDockIcon()
 {
     // 总宽度
@@ -1249,7 +1126,6 @@ void MainPanelControl::resizeDockIcon()
     };
 
 
-    // FIXME: Somewhere eat my iconcount * 1
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
         totalLength -= m_fixedAreaLayout->count() * height();
         int appiconCount = totalLength / height();
@@ -1309,8 +1185,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         } else {
             if (child->itemType() == DockItem::ItemType::App) {
                 child->setFixedSize(appItemSize , appItemSize);
-                child->setParent(m_overflowArea);
-                m_overflowAreaLayout->insertWidget(0, child, 0, Qt::AlignCenter);
+                m_overflowBtn->addItem(child);
                 overflowcount += 1;
             }
         }
@@ -1326,34 +1201,31 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
 
     // 如果有溢出區
     if (showtype != 0) {
-        m_overflowButton->setVisible(true);
-        m_overflowButton->setFixedSize(appItemSize, appItemSize);
+        m_activeApp->setVisible(true);
+        m_activeApp->setFixedSize(appItemSize, appItemSize);
         //addAppAreaItem(-1, m_overflowButton);
         if (showtype == 2) {
-            m_stayApp->setVisible(true);
-            m_stayApp->setFixedSize(appItemSize, appItemSize);
+            m_overflowBtn->setVisible(true);
+            m_overflowBtn->setFixedSize(appItemSize, appItemSize);
             //addAppAreaItem(-1, m_stayApp);
         } else {
-            m_stayApp->setVisible(false);
+            m_overflowBtn->setVisible(false);
         }
         switch (m_position) {
             case Dock::Left:
             case Dock::Right:
-                m_overflowArea->setFixedSize(appItemSize * 1.4 , realheight);
-                m_overflowScrollArea->setFixedSize(appItemSize * 1.4 , realheight);
+                m_overflowBtn->setPopUpSize(appItemSize * 1.4, realheight);
                 break;
             case Dock::Top:
             case Dock::Bottom:
-                m_overflowArea->setFixedSize(realwidth, appItemSize * 1.4);
-                m_overflowScrollArea->setFixedSize(realwidth, appItemSize * 1.4);
+                m_overflowBtn->setPopUpSize(realwidth, appItemSize * 1.4);
                 break;
         }
 
     } else {
-        m_overflowButton->setVisible(false);
-        m_stayApp->setVisible(false);
-        m_overflowButton->setFixedSize(appItemSize, appItemSize);
-        m_overflowArea->hide();
+        m_activeApp->setVisible(false);
+        m_overflowBtn->setVisible(false);
+        m_activeApp->setFixedSize(appItemSize, appItemSize);
     }
 
     if (m_tray) {

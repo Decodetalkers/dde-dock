@@ -28,6 +28,7 @@ public:
         Plugins,
         FixedPlugin,
         Placeholder,
+        OverflowIcon,
         TrayPlugin,
     };
 
