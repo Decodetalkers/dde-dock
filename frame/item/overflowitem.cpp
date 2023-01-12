@@ -1,9 +1,9 @@
 #include "overflowitem.h"
-#include <qboxlayout.h>
-#include <qlabel.h>
-#include <qpushbutton.h>
-#include <qscrollarea.h>
-#include <QApplication>
+#include "itemconsts.h"
+
+#include <QBoxLayout>
+#include <QLabel>
+#include <QScrollArea>
 #include <QScrollBar>
 const QString image_src = QStringLiteral(":/icons/resources/application-x-desktop");
 
@@ -31,6 +31,7 @@ OverflowItem::OverflowItem(QWidget *parent)
     m_scrollarea->setWidgetResizable(true);
 
     m_centerScroll->setLayout(m_popuplayout);
+    m_centerScroll->setAccessibleName(OVERFLOWWIDGET_ACCESS_NAME);
     m_centerScroll->setAttribute(Qt::WA_TranslucentBackground);
     m_scrollarea->setWidget(m_centerScroll);
 
@@ -139,6 +140,7 @@ bool OverflowItem::eventFilter(QObject *watched, QEvent *event) {
                 m_scrollarea->verticalScrollBar()->setValue(m_scrollarea->verticalScrollBar()->value() + scroll_len);
             }
         }
+
         return true;
     }
     return DockItem::eventFilter(watched,event);

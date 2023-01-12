@@ -28,9 +28,7 @@ class DockItem;
 class PlaceholderItem;
 class AppDragWidget;
 class DesktopWidget;
-class OverFlowComponent;
 class OverflowItem;
-class PlaceholderItem;
 class MainPanelControl : public QWidget
 {
     Q_OBJECT
@@ -81,6 +79,9 @@ private:
 
     int getItemIndex(DockItem *targetItem) const;
 
+    // about resize
+    // void resizeLayout();
+
 protected:
     void dragMoveEvent(QDragMoveEvent *e) override;
     void dragEnterEvent(QDragEnterEvent *e) override;
@@ -93,14 +94,8 @@ protected:
     void paintEvent(QPaintEvent *event) override;
 
 private:
-    //OverFlowComponent *m_overflowLBtn;
     OverflowItem *m_overflowBtn;
-    PlaceholderItem *m_activeApp;    // show m_overflow
-    //DArrowRectangle *m_overflowArea;  // overflow area
-    //QScrollArea *m_overflowScrollArea;
     QBoxLayout *m_overflowAreaLayout; // overflow layout
-    //OverFlowComponent *m_overflowRBtn;
-    //int overflowIndex = -1; // if started is -1, then not show tow btn
 
     QBoxLayout *m_mainPanelLayout;
 

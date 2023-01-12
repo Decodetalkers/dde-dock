@@ -46,7 +46,9 @@ DockItem::DockItem(QWidget *parent)
     m_popupAdjustDelayTimer->setInterval(10);
     m_popupAdjustDelayTimer->setSingleShot(true);
 
-    connect(m_popupTipsDelayTimer, &QTimer::timeout, this, &DockItem::showHoverTips);
+    connect(m_popupTipsDelayTimer, &QTimer::timeout, this, [=] {
+            showHoverTips();
+    });
     connect(m_popupAdjustDelayTimer, &QTimer::timeout, this, &DockItem::updatePopupPosition, Qt::QueuedConnection);
     connect(&m_contextMenu, &QMenu::triggered, this, &DockItem::menuActionClicked);
 

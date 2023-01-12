@@ -32,6 +32,7 @@ public:
     void checkEntry() override;
     const QString appId() const;
     bool isValid() const;
+    bool isActive() const;
     void updateWindowIconGeometries();
     void undock();
     QWidget *appDragWidget();
@@ -41,8 +42,6 @@ public:
     QPixmap appIcon(){ return m_appIcon; }
     virtual QString accessibleName() override;
     inline quint32 getAppItemWindowId() const { return  m_currentWindowId; }
-
-    AppItem* clone(QWidget *parent);
 
 signals:
     void requestActivateWindow(const WId wid) const;

@@ -5,14 +5,12 @@
 #include "mainpanelcontrol.h"
 #include "appitem.h"
 #include "components/appdrag.h"
-#include "components/overflowcomponent.h"
 #include "constants.h"
 #include "desktop_widget.h"
 #include "dockitem.h"
 #include "dockitemmanager.h"
 #include "imageutil.h"
 #include "overflowitem.h"
-#include "placeholderitem.h"
 #include "pluginsitem.h"
 #include "touchsignalmanager.h"
 #include "traypluginitem.h"
@@ -49,18 +47,9 @@
 
 DWIDGET_USE_NAMESPACE
 
-const QString go_up = QStringLiteral(":/icons/resources/arrow-up");
-const QString go_down = QStringLiteral(":/icons/resources/arrow-down");
-const QString go_left = QStringLiteral(":/icons/resources/arrow-left");
-const QString go_right = QStringLiteral(":/icons/resources/arrow-right");
-const QString app_image = QStringLiteral(":/icons/resources/application-x-desktop");
-
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
     , m_overflowBtn(new OverflowItem(this))
-    , m_activeApp(new PlaceholderItem(this))
-    //, m_overflowArea(new DArrowRectangle(DArrowRectangle::ArrowBottom))
-    //, m_overflowScrollArea(new QScrollArea)
     , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
     , m_mainPanelLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_fixedAreaWidget(new QWidget(this))
@@ -94,6 +83,7 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     //m_overflowArea->installEventFilter(this);
     m_appAreaWidget->installEventFilter(this);
     m_appAreaSonWidget->installEventFilter(this);
+    m_appOverflowWidget->installEventFilter(this);
     //m_overflowArea->installEventFilter(this);
     //m_overflowScrollArea->installEventFilter(this);
     m_trayAreaWidget->installEventFilter(this);
@@ -133,14 +123,12 @@ void MainPanelControl::initUI()
 
     /* overflow zone */
     m_appOverflowWidget->setAccessibleName("AppOverFlowArea");
+    m_mainPanelLayout->addWidget(m_appOverflowWidget, 0, Qt::AlignCenter);
     m_appOverflowWidget->setLayout(m_appOverflowLayout);
-
     m_overflowBtn->setVisible(false);
     m_appOverflowLayout->addWidget(m_overflowBtn);
-    m_appOverflowLayout->addWidget(m_activeApp);
     m_appOverflowLayout->setSpacing(0);
     m_appOverflowLayout->setContentsMargins(0, 0, 0, 0);
-    m_mainPanelLayout->addWidget(m_appOverflowWidget, 0, Qt::AlignCenter);
 
     m_overflowSpliter->setObjectName("spliter_overflow");
     m_mainPanelLayout->addWidget(m_overflowSpliter);
@@ -415,6 +403,8 @@ void MainPanelControl::insertItem(int index, DockItem *item)
         case DockItem::Plugins:
             addPluginAreaItem(index, item);
             break;
+        default:
+            break;
     }
 
     // 同removeItem处 注意:不能屏蔽此接口，否则会造成插件插入时无法显示
@@ -445,6 +435,8 @@ void MainPanelControl::removeItem(DockItem *item)
             break;
         case DockItem::Plugins:
             removePluginAreaItem(item);
+            break;
+        default:
             break;
     }
 
@@ -990,8 +982,6 @@ void MainPanelControl::setToggleDesktopInterval(int ms)
         m_desktopWidget->setToggleDesktopInterval(ms);
 }
 
-// TODO: new logicwindterm
-// TODO: Now Need to push overflow to another place
 void MainPanelControl::itemUpdated(DockItem *item)
 {
     item->updateGeometry();
@@ -1139,9 +1129,6 @@ void MainPanelControl::resizeDockIcon()
     }
 }
 
-// FIXME: ONLY USE HEIGHT
-// FIXME: here to fix the logic , now over flow should be hide
-// FIXME: Move to another place
 void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
 {
 
@@ -1168,29 +1155,38 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     int index = 0;
     int overflowcount = 0;
  
-    //int itemindex = 0;
-    //int maxuseindex = 0;
-    //int maxclicked = 0;
+    int itemindex = 0;
+    int maxuseindex = -1;
+    int maxclicked = -1;
+    int hasappFocus = false;
     // caculate count
+    // FIXME: move it to resizeEvent
     for (auto child : children) {
-        //itemindex += 1;
-        if (index < maxcount) {
-            if (child->itemType() == DockItem::ItemType::App) {
+        if (child->itemType() == DockItem::ItemType::App) {
+            if (index < maxcount) {
                 child->setFixedSize(appItemSize, appItemSize);
                 child->setParent(m_appAreaSonWidget);
                 child->setVisible(true);
                 addAppAreaItem(-1, child);
-                index += 1;
-            }
-        } else {
-            if (child->itemType() == DockItem::ItemType::App) {
+            } else {
                 child->setFixedSize(appItemSize , appItemSize);
                 m_overflowBtn->addItem(child);
                 overflowcount += 1;
+                if (static_cast<AppItem *>(child.data())->isActive()) {
+                    hasappFocus = true;
+                    maxuseindex = itemindex;
+                }
+                if (!hasappFocus) {
+                    if (child->getClickedCount() >= maxclicked) {
+                        maxclicked = child->getClickedCount();
+                        maxuseindex = itemindex;
+                    }
+                }
             }
+            index += 1;
         }
+        itemindex += 1;
     }
-    //m_stayApp = static_cast<AppItem *>(children[maxuseindex].data())->clone(m_appOverflowWidget);
 
     int maxwidth = width() - 40;
     int maxheight = height() - 40;
@@ -1201,12 +1197,10 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
 
     // 如果有溢出區
     if (showtype != 0) {
-        m_activeApp->setVisible(true);
-        m_activeApp->setFixedSize(appItemSize, appItemSize);
-        //addAppAreaItem(-1, m_overflowButton);
         if (showtype == 2) {
             m_overflowBtn->setVisible(true);
             m_overflowBtn->setFixedSize(appItemSize, appItemSize);
+            m_appOverflowLayout->addWidget(children[maxuseindex]);
             //addAppAreaItem(-1, m_stayApp);
         } else {
             m_overflowBtn->setVisible(false);
@@ -1223,9 +1217,7 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         }
 
     } else {
-        m_activeApp->setVisible(false);
         m_overflowBtn->setVisible(false);
-        m_activeApp->setFixedSize(appItemSize, appItemSize);
     }
 
     if (m_tray) {
@@ -1286,7 +1278,6 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         appLeftAndRightMargin, appTopAndBottomMargin, appLeftAndRightMargin, appTopAndBottomMargin);
     m_trayAreaLayout->setContentsMargins(
         trayLeftAndRightMargin, trayTopAndBottomMargin, trayLeftAndRightMargin, trayTopAndBottomMargin);
-
     // 因为日期时间插件或第三方插件声明自定义大小
     // 而不对自定义大小插件设置边距
     for (int i = 0; i < m_pluginLayout->count(); ++i) {
