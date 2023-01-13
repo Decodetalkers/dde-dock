@@ -104,20 +104,8 @@ MainPanelControl::MainPanelControl(QWidget *parent)
         update();
     });
 
-    connect(DockItemManager::instance(), &DockItemManager::itemUpdated, this, [this]{
-        resizeLayout();
-        update();
-    });
-
-    connect(DockItemManager::instance(), &DockItemManager::itemInserted, this, [this]{
-        resizeLayout();
-        update();
-    });
-
     connect(DockItemManager::instance(), &DockItemManager::itemRemoved, this, [this]{
         m_overflowBtn->hidePopUpWindow();
-        resizeLayout();
-        update();
     });
 }
 
@@ -396,6 +384,7 @@ void MainPanelControl::setPositonValue(Dock::Position position)
     if (m_position == position)
         return;
     m_position = position;
+    m_overflowBtn->setLayoutPosition(position);
     QTimer::singleShot(0, this, &MainPanelControl::updateMainPanelLayout);
 }
 
@@ -421,6 +410,7 @@ void MainPanelControl::insertItem(int index, DockItem *item)
         case DockItem::App:
         case DockItem::Placeholder:
             addAppAreaItem(index, item);
+            resizeLayout();
             break;
         case DockItem::TrayPlugin:  // 此处只会有一个tray系统托盘插件，微信、声音、网络蓝牙等等，都在系统托盘插件中处理的
             addTrayAreaItem(index, item);
@@ -473,6 +463,8 @@ void MainPanelControl::removeItem(DockItem *item)
      */
     if (item->itemType() != DockItem::App)
         resizeDockIcon();
+    else
+        resizeLayout();
 }
 
 /**任务栏移动应用图标
@@ -1196,10 +1188,9 @@ void MainPanelControl::resizeLayout() {
 
     int maxwidth = width() - 40;
     int maxheight = height() - 40;
-    int counticonwidth = overflowcount * m_appItemSize * 1.3;
-    int counticonheight = overflowcount * m_appItemSize * 1.3;
-    int realwidth = qMin(maxwidth, counticonwidth);
-    int realheight = qMin(maxheight, counticonheight);
+    int area_max_len = overflowcount * m_appItemSize * 1.3;
+    int realwidth = qMin(maxwidth, area_max_len);
+    int realheight = qMin(maxheight, area_max_len);
 
     // 如果有溢出區
     if (m_showtype != 0) {
@@ -1207,7 +1198,6 @@ void MainPanelControl::resizeLayout() {
             m_overflowBtn->setVisible(true);
             m_overflowBtn->setFixedSize(m_appItemSize, m_appItemSize);
             m_appOverflowLayout->addWidget(children[maxuseindex]);
-            //addAppAreaItem(-1, m_stayApp);
         } else {
             m_overflowBtn->setVisible(false);
         }
@@ -1228,6 +1218,7 @@ void MainPanelControl::resizeLayout() {
 
 void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
 {
+    // update infomation
     m_maxcount = maxcount;
     m_showtype = showtype;
     m_appItemSize = appItemSize;

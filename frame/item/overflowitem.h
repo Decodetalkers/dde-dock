@@ -22,8 +22,13 @@ public:
     void setPopUpSize(int width, int height);
     void addItem(QWidget *item);
     void hidePopUpWindow();
+    void setLayoutPosition(Dock::Position position);
 protected:
+    void enterEvent(QEvent *e) override;
     void mousePressEvent(QMouseEvent *e) override;
+    void mouseMoveEvent(QMouseEvent *e) override;
+    void mouseReleaseEvent(QMouseEvent *e) override;
+    void leaveEvent(QEvent *e) override;
     bool eventFilter(QObject *watched, QEvent *e) override;
 private:
     void paintEvent(QPaintEvent *e) override;
@@ -33,6 +38,8 @@ private:
 private:
     QPoint OverflowIconPosition(const QPixmap &pixmap) const;
 private:
+    bool m_clicked;
+    bool m_hover;
     bool m_showpopup;
     QScrollArea *m_scrollarea;
     QWidget *m_centerScroll;

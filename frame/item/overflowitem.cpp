@@ -11,10 +11,12 @@ const QString OVERFLOW_MORE = QStringLiteral(":/icons/resources/overflow-more");
 
 OverflowItem::OverflowItem(QWidget *parent)
     : DockItem(parent)
+    , m_clicked(false)
+    , m_hover(false)
     , m_showpopup(false)
     , m_scrollarea(new QScrollArea)
     , m_centerScroll(new QWidget)
-    , m_popuplayout(new QBoxLayout(QBoxLayout::BottomToTop))
+    , m_popuplayout(new QBoxLayout(QBoxLayout::LeftToRight))
     , m_popupwindow(new DockPopupWindow)
 {
     m_popupwindow->setShadowBlurRadius(20);
@@ -32,6 +34,7 @@ OverflowItem::OverflowItem(QWidget *parent)
     m_scrollarea->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
     m_scrollarea->setBackgroundRole(QPalette::Base);
     m_scrollarea->setWidgetResizable(true);
+    m_scrollarea->setAutoFillBackground(true);
 
     m_centerScroll->setLayout(m_popuplayout);
     m_centerScroll->setAccessibleName(OVERFLOWWIDGET_ACCESS_NAME);
@@ -67,16 +70,7 @@ QPoint OverflowItem::OverflowIconPosition(const QPixmap &pixmap) const {
 void OverflowItem::paintEvent(QPaintEvent *e) {
 
     DockItem::paintEvent(e);
-    switch (DockPosition) {
-        case Top:
-        case Bottom:
-            m_popuplayout->setDirection(QBoxLayout::LeftToRight);
-            break;
-        case Left:
-        case Right:
-            m_popuplayout->setDirection(QBoxLayout::TopToBottom);
-            break;
-    }
+
     if (!isVisible()) {
         return;
     }
@@ -90,7 +84,13 @@ void OverflowItem::paintEvent(QPaintEvent *e) {
     image.scaled(realsize.x(), realsize.y());
     painter.drawPixmap(realsize, image);
 
-    painter.setOpacity(0.7);
+    painter.setOpacity(0.3);
+    if (m_hover) {
+        painter.setOpacity(0.4);
+    }
+    if (m_clicked) {
+        painter.setOpacity(0.7);
+    }
     qreal min = qMin(rect().width(), rect().height());
     QRectF backgroundRect = QRectF(rect().x(), rect().y(), min, min);
     backgroundRect = backgroundRect.marginsRemoved(QMargins(2, 2, 2, 2));
@@ -108,8 +108,21 @@ void OverflowItem::paintEvent(QPaintEvent *e) {
 
 }
 
+void OverflowItem::setLayoutPosition(Dock::Position position) {
+    switch (position) {
+        case Top:
+        case Bottom:
+            m_popuplayout->setDirection(QBoxLayout::LeftToRight);
+            break;
+        case Left:
+        case Right:
+            m_popuplayout->setDirection(QBoxLayout::TopToBottom);
+            break;
+    }
+}
 
 void OverflowItem::mousePressEvent(QMouseEvent *e) {
+    m_clicked = true;
     m_showpopup = !m_showpopup;
     if (m_showpopup) {
         m_popupwindow->setLeftRightRadius(DWindowManagerHelper::instance()->hasComposite());
@@ -118,6 +131,28 @@ void OverflowItem::mousePressEvent(QMouseEvent *e) {
         m_popupwindow->hide();
     }
     DockItem::mousePressEvent(e);
+}
+
+void OverflowItem::mouseMoveEvent(QMouseEvent *e) {
+    m_hover = true;
+    DockItem::mouseMoveEvent(e);
+}
+
+void OverflowItem::mouseReleaseEvent(QMouseEvent *e) {
+    m_hover = false;
+    m_clicked = false;
+    DockItem::mouseReleaseEvent(e);
+}
+
+void OverflowItem::enterEvent(QEvent *e) {
+    m_hover = true;
+    DockItem::enterEvent(e);
+}
+
+void OverflowItem::leaveEvent(QEvent *e) {
+    m_hover = false;
+    m_clicked = false;
+    DockItem::leaveEvent(e);
 }
 
 void OverflowItem::showPopupWindow(QWidget *const content, const bool model, const int radius) {
