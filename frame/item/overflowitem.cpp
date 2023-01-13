@@ -1,11 +1,13 @@
 #include "overflowitem.h"
+#include "dwindowmanagerhelper.h"
 #include "itemconsts.h"
-
+#include "appitem.h"
 #include <QBoxLayout>
 #include <QLabel>
 #include <QScrollArea>
 #include <QScrollBar>
-const QString image_src = QStringLiteral(":/icons/resources/application-x-desktop");
+const QString ICON_DEFAULT = QStringLiteral(":/icons/resources/application-x-desktop");
+const QString OVERFLOW_MORE = QStringLiteral(":/icons/resources/overflow-more");
 
 OverflowItem::OverflowItem(QWidget *parent)
     : DockItem(parent)
@@ -22,6 +24,7 @@ OverflowItem::OverflowItem(QWidget *parent)
     m_popupwindow->setArrowWidth(18);
     m_popupwindow->setArrowHeight(10);
     m_popupwindow->setObjectName("overlaypopup");
+    m_popupwindow->setLeftRightRadius(true);
 
     m_scrollarea->setFrameStyle(QFrame::NoFrame);
     m_scrollarea->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
@@ -33,9 +36,15 @@ OverflowItem::OverflowItem(QWidget *parent)
     m_centerScroll->setLayout(m_popuplayout);
     m_centerScroll->setAccessibleName(OVERFLOWWIDGET_ACCESS_NAME);
     m_centerScroll->setAttribute(Qt::WA_TranslucentBackground);
+    m_centerScroll->setAutoFillBackground(true);
     m_scrollarea->setWidget(m_centerScroll);
 
     m_scrollarea->installEventFilter(this);
+}
+
+void OverflowItem::hidePopUpWindow() {
+    m_showpopup = false;
+    m_popupwindow->hide();
 }
 
 void OverflowItem::setPopUpSize(int width, int height) {
@@ -44,6 +53,15 @@ void OverflowItem::setPopUpSize(int width, int height) {
 
 void OverflowItem::addItem(QWidget *item) {
     m_popuplayout->addWidget(item,0, Qt::AlignCenter);
+}
+
+QPoint OverflowItem::OverflowIconPosition(const QPixmap &pixmap) const {
+    const auto ratio = devicePixelRatioF();
+    const QRectF itemRect = rect();
+    const QRectF iconRect = pixmap.rect();
+    const qreal iconX = itemRect.center().x() - iconRect.center().x() / ratio;
+    const qreal iconY = itemRect.center().y() - iconRect.center().y() / ratio;
+    return QPoint(iconX, iconY);
 }
 
 void OverflowItem::paintEvent(QPaintEvent *e) {
@@ -56,7 +74,7 @@ void OverflowItem::paintEvent(QPaintEvent *e) {
             break;
         case Left:
         case Right:
-            m_popuplayout->setDirection(QBoxLayout::BottomToTop);
+            m_popuplayout->setDirection(QBoxLayout::TopToBottom);
             break;
     }
     if (!isVisible()) {
@@ -64,22 +82,38 @@ void OverflowItem::paintEvent(QPaintEvent *e) {
     }
     QPainter painter(this);
 
-    QPixmap image(image_src);
-    QRectF rf = QRectF(rect());
-    QRectF rfp = QRectF(image.rect());
-    QPointF p = rf.center() - rfp.center() / image.devicePixelRatioF();
+    QPixmap image(ICON_DEFAULT);
+    if (m_popuplayout->count() != 0) {
+        image = static_cast<AppItem *>(m_popuplayout->itemAt(0)->widget())->appIcon();
+    }
+    QPoint realsize = OverflowIconPosition(image);
+    image.scaled(realsize.x(), realsize.y());
+    painter.drawPixmap(realsize, image);
 
-    painter.drawPixmap(p, image);
+    painter.setOpacity(0.7);
+    qreal min = qMin(rect().width(), rect().height());
+    QRectF backgroundRect = QRectF(rect().x(), rect().y(), min, min);
+    backgroundRect = backgroundRect.marginsRemoved(QMargins(2, 2, 2, 2));
+    backgroundRect.moveCenter(rect().center());
+
+    QPainterPath path;
+    path.addRoundedRect(backgroundRect, 8, 8);
+    painter.fillPath(path, QColor(0, 0, 0, 255 * 0.8));
+
+    painter.setOpacity(1);
+    QPixmap moreicons(OVERFLOW_MORE);
+    QPoint realsize_more = OverflowIconPosition(moreicons);
+    moreicons.scaled(realsize.x(), realsize.y());
+    painter.drawPixmap(realsize_more, moreicons);
+
 }
 
-QWidget *OverflowItem::popupTips() {
-    return new QLabel("SSSS GRIDMAN");
-}
 
 void OverflowItem::mousePressEvent(QMouseEvent *e) {
     m_showpopup = !m_showpopup;
     if (m_showpopup) {
-        showPopupWindow(m_scrollarea);
+        m_popupwindow->setLeftRightRadius(DWindowManagerHelper::instance()->hasComposite());
+        showPopupWindow(m_scrollarea, true, 12);
     } else {
         m_popupwindow->hide();
     }
@@ -87,7 +121,6 @@ void OverflowItem::mousePressEvent(QMouseEvent *e) {
 }
 
 void OverflowItem::showPopupWindow(QWidget *const content, const bool model, const int radius) {
-    PopupWindow->setRadius(radius);
 
     m_popupShown = true;
     m_lastPopupWidget = content;
@@ -95,25 +128,25 @@ void OverflowItem::showPopupWindow(QWidget *const content, const bool model, con
     if (model)
         emit requestWindowAutoHide(false);
 
-    DockPopupWindow *popup = m_popupwindow;
-    QWidget *lastContent = popup->getContent();
+    m_popupwindow->setRadius(radius);
+    QWidget *lastContent = m_popupwindow->getContent();
     if (lastContent)
         lastContent->setVisible(false);
 
     switch (DockPosition) {
-        case Top:   popup->setArrowDirection(DockPopupWindow::ArrowTop);     break;
-        case Bottom: popup->setArrowDirection(DockPopupWindow::ArrowBottom);  break;
-        case Left:  popup->setArrowDirection(DockPopupWindow::ArrowLeft);    break;
-        case Right: popup->setArrowDirection(DockPopupWindow::ArrowRight);   break;
+        case Top:   m_popupwindow->setArrowDirection(DockPopupWindow::ArrowTop);     break;
+        case Bottom: m_popupwindow->setArrowDirection(DockPopupWindow::ArrowBottom);  break;
+        case Left:  m_popupwindow->setArrowDirection(DockPopupWindow::ArrowLeft);    break;
+        case Right: m_popupwindow->setArrowDirection(DockPopupWindow::ArrowRight);   break;
     }
-    popup->resize(content->sizeHint());
-    popup->setContent(content);
+    m_popupwindow->resize(content->sizeHint());
+    m_popupwindow->setContent(content);
 
     const QPoint p = popupMarkPoint();
-    if (!popup->isVisible())
-        QMetaObject::invokeMethod(popup, "show", Qt::QueuedConnection, Q_ARG(QPoint, p), Q_ARG(bool, model));
+    if (!m_popupwindow->isVisible())
+        QMetaObject::invokeMethod(m_popupwindow, "show", Qt::QueuedConnection, Q_ARG(QPoint, p), Q_ARG(bool, model));
     else
-        popup->show(p, model);
+        m_popupwindow->show(p, model);
 }
 
 bool OverflowItem::eventFilter(QObject *watched, QEvent *event) {
@@ -141,6 +174,8 @@ bool OverflowItem::eventFilter(QObject *watched, QEvent *event) {
             }
         }
 
+        m_popupwindow->update();
+        m_centerScroll->update();
         return true;
     }
     return DockItem::eventFilter(watched,event);

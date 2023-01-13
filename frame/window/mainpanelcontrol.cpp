@@ -95,6 +95,30 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     m_overflowSpliter->setFixedSize(0, 0);
     m_appSpliter->setFixedSize(0, 0);
     m_traySpliter->setFixedSize(0, 0);
+
+
+    // when size or new item in , resizeLayout
+    connect(this, &MainPanelControl::updateLayout, this, [this]{
+        m_overflowBtn->hidePopUpWindow();
+        resizeLayout();
+        update();
+    });
+
+    connect(DockItemManager::instance(), &DockItemManager::itemUpdated, this, [this]{
+        resizeLayout();
+        update();
+    });
+
+    connect(DockItemManager::instance(), &DockItemManager::itemInserted, this, [this]{
+        resizeLayout();
+        update();
+    });
+
+    connect(DockItemManager::instance(), &DockItemManager::itemRemoved, this, [this]{
+        m_overflowBtn->hidePopUpWindow();
+        resizeLayout();
+        update();
+    });
 }
 
 void MainPanelControl::initUI()
@@ -342,6 +366,7 @@ void MainPanelControl::resizeEvent(QResizeEvent *event)
     QWidget::resizeEvent(event);
     resizeDesktopWidget();
     resizeDockIcon();
+    resizeLayout();
 }
 
 /**根据任务栏所在位置， 设置应用区域控件的大小
@@ -1129,25 +1154,7 @@ void MainPanelControl::resizeDockIcon()
     }
 }
 
-void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
-{
-
-    // set origin one size
-    for (int i = 0; i < m_fixedAreaLayout->count(); ++i) {
-        m_fixedAreaLayout->itemAt(i)->widget()->setFixedSize(appItemSize, appItemSize);
-    }
-
-    if (m_position == Dock::Position::Top || m_position == Dock::Position::Bottom) {
-        m_fixedSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
-        m_appSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
-        m_traySpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.5));
-        m_overflowSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
-    } else {
-        m_fixedSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
-        m_appSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
-        m_traySpliter->setFixedSize(int(appItemSize * 0.5), SPLITER_SIZE);
-        m_overflowSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
-    }
+void MainPanelControl::resizeLayout() {
 
     // get all children
     auto children = DockItemManager::instance()->itemList();
@@ -1160,16 +1167,15 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
     int maxclicked = -1;
     int hasappFocus = false;
     // caculate count
-    // FIXME: move it to resizeEvent
     for (auto child : children) {
         if (child->itemType() == DockItem::ItemType::App) {
-            if (index < maxcount) {
-                child->setFixedSize(appItemSize, appItemSize);
+            if (index < m_maxcount) {
+                child->setFixedSize(m_appItemSize, m_appItemSize);
                 child->setParent(m_appAreaSonWidget);
                 child->setVisible(true);
                 addAppAreaItem(-1, child);
             } else {
-                child->setFixedSize(appItemSize , appItemSize);
+                child->setFixedSize(m_appItemSize , m_appItemSize);
                 m_overflowBtn->addItem(child);
                 overflowcount += 1;
                 if (static_cast<AppItem *>(child.data())->isActive()) {
@@ -1190,16 +1196,16 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
 
     int maxwidth = width() - 40;
     int maxheight = height() - 40;
-    int counticonwidth = overflowcount * appItemSize * 1.3;
-    int counticonheight = overflowcount * appItemSize * 1.3;
+    int counticonwidth = overflowcount * m_appItemSize * 1.3;
+    int counticonheight = overflowcount * m_appItemSize * 1.3;
     int realwidth = qMin(maxwidth, counticonwidth);
     int realheight = qMin(maxheight, counticonheight);
 
     // 如果有溢出區
-    if (showtype != 0) {
-        if (showtype == 2) {
+    if (m_showtype != 0) {
+        if (m_showtype == 2) {
             m_overflowBtn->setVisible(true);
-            m_overflowBtn->setFixedSize(appItemSize, appItemSize);
+            m_overflowBtn->setFixedSize(m_appItemSize, m_appItemSize);
             m_appOverflowLayout->addWidget(children[maxuseindex]);
             //addAppAreaItem(-1, m_stayApp);
         } else {
@@ -1208,17 +1214,49 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         switch (m_position) {
             case Dock::Left:
             case Dock::Right:
-                m_overflowBtn->setPopUpSize(appItemSize * 1.4, realheight);
+                m_overflowBtn->setPopUpSize(m_appItemSize * 1.4, realheight);
                 break;
             case Dock::Top:
             case Dock::Bottom:
-                m_overflowBtn->setPopUpSize(realwidth, appItemSize * 1.4);
+                m_overflowBtn->setPopUpSize(realwidth, m_appItemSize * 1.4);
                 break;
         }
-
     } else {
         m_overflowBtn->setVisible(false);
     }
+}
+
+void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
+{
+    m_maxcount = maxcount;
+    m_showtype = showtype;
+    m_appItemSize = appItemSize;
+    // set origin one size
+    for (int i = 0; i < m_fixedAreaLayout->count(); ++i) {
+        m_fixedAreaLayout->itemAt(i)->widget()->setFixedSize(appItemSize, appItemSize);
+    }
+
+    if (m_position == Dock::Position::Top || m_position == Dock::Position::Bottom) {
+        m_fixedSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
+        m_appSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
+        m_traySpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.5));
+        if (m_showtype != 0) {
+            m_overflowSpliter->setFixedSize(SPLITER_SIZE, int(appItemSize * 0.6));
+        } else {
+            m_overflowSpliter->setFixedSize(0, 0);
+        }
+
+    } else {
+        m_fixedSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
+        m_appSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
+        m_traySpliter->setFixedSize(int(appItemSize * 0.5), SPLITER_SIZE);
+        if (m_showtype != 0) {
+            m_overflowSpliter->setFixedSize(int(appItemSize * 0.6), SPLITER_SIZE);
+        } else {
+            m_overflowSpliter->setFixedSize(0, 0);
+        }
+    }
+
 
     if (m_tray) {
         m_tray->centralWidget()->setProperty("iconSize", traySize);
@@ -1290,6 +1328,12 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
                     trayLeftAndRightMargin, trayTopAndBottomMargin, trayLeftAndRightMargin, trayTopAndBottomMargin);
             }
         }
+    }
+
+    if (m_trayAreaWidget->size() != m_trayareaSize || m_pluginAreaWidget->size() != m_pluginareaSize) {
+        m_trayareaSize = m_trayAreaWidget->size();
+        m_pluginareaSize = m_pluginAreaWidget->size();
+        emit updateLayout();
     }
 }
 

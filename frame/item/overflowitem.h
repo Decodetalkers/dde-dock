@@ -21,13 +21,17 @@ public:
     inline ItemType itemType() const override { return OverflowIcon; }
     void setPopUpSize(int width, int height);
     void addItem(QWidget *item);
+    void hidePopUpWindow();
 protected:
     void mousePressEvent(QMouseEvent *e) override;
     bool eventFilter(QObject *watched, QEvent *e) override;
 private:
     void paintEvent(QPaintEvent *e) override;
-    QWidget * popupTips() override;
+    //QWidget * popupTips() override;
     void showPopupWindow(QWidget *const content, const bool model = false, const int radius = 6) override;
+
+private:
+    QPoint OverflowIconPosition(const QPixmap &pixmap) const;
 private:
     bool m_showpopup;
     QScrollArea *m_scrollarea;
