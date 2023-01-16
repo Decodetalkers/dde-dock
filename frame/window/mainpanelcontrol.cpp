@@ -1134,15 +1134,18 @@ void MainPanelControl::resizeDockIcon()
 
 
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
-        totalLength -= m_fixedAreaLayout->count() * height();
-        int appiconCount = totalLength / height();
+        // realheight
+        int realheight = qMax(20, height());
+        totalLength -= m_fixedAreaLayout->count() * realheight;
+        int appiconCount = totalLength / realheight;
         QPair<int ,int> realappiconCount = get_real_count(appiconCount);
-        calcuDockIconSize(height(), realappiconCount.first, realappiconCount.second, tray_item_size);
+        calcuDockIconSize(realheight, realappiconCount.first, realappiconCount.second, tray_item_size);
     } else {
-        totalLength -= m_fixedAreaLayout->count() * width();
-        int appiconCount = totalLength  / width();
+        int realwidth = qMax(20, width());
+        totalLength -= m_fixedAreaLayout->count() * realwidth;
+        int appiconCount = totalLength  / realwidth;
         QPair<int ,int> realappiconCount = get_real_count(appiconCount);
-        calcuDockIconSize(width(), realappiconCount.first, realappiconCount.second, tray_item_size);
+        calcuDockIconSize(realwidth, realappiconCount.first, realappiconCount.second, tray_item_size);
     }
 }
 
