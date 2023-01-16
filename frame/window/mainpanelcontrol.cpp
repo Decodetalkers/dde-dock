@@ -1088,6 +1088,7 @@ void MainPanelControl::resizeDockIcon()
     if (iconCount <= 0)
         return;
 
+    // Icon is width or height
     int iconSize = ((m_position == Position::Top) || (m_position == Position::Bottom)) ? width() : height();
 
     // 计算插件图标的最大或最小值
