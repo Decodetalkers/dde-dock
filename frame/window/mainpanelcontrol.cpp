@@ -48,8 +48,6 @@ DWIDGET_USE_NAMESPACE
 
 MainPanelControl::MainPanelControl(QWidget *parent)
     : QWidget(parent)
-    , m_overflowBtn(new OverflowItem(this))
-    , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
     , m_mainPanelLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
     , m_fixedAreaWidget(new QWidget(this))
     , m_fixedAreaLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
@@ -60,6 +58,8 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     , m_appSpliter(new QLabel(this))
     , m_appOverflowWidget(new QWidget(this))
     , m_appOverflowLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
+    , m_overflowBtn(new OverflowItem(this))
+    , m_overflowAreaLayout(new QBoxLayout(QBoxLayout::RightToLeft))
     , m_overflowSpliter(new QLabel)
     , m_trayAreaWidget(new QWidget(this))
     , m_trayAreaLayout(new QBoxLayout(QBoxLayout::LeftToRight, this))
@@ -79,21 +79,18 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     setAcceptDrops(true);
     setMouseTracking(true);
 
-    //m_overflowArea->installEventFilter(this);
     m_appAreaWidget->installEventFilter(this);
     m_appAreaSonWidget->installEventFilter(this);
     m_appOverflowWidget->installEventFilter(this);
-    //m_overflowArea->installEventFilter(this);
-    //m_overflowScrollArea->installEventFilter(this);
     m_trayAreaWidget->installEventFilter(this);
     m_pluginAreaWidget->installEventFilter(this);
 
     // 在设置每条线大小前，应该设置fixedsize(0,0)
     // 应为paintEvent函数会先调用设置背景颜色，大小为随机值
-    m_fixedSpliter->setFixedSize(0, 0);
-    m_overflowSpliter->setFixedSize(0, 0);
-    m_appSpliter->setFixedSize(0, 0);
-    m_traySpliter->setFixedSize(0, 0);
+    m_fixedSpliter->setFixedSize(0,0);
+    m_overflowSpliter->setFixedSize(0,0);
+    m_appSpliter->setFixedSize(0,0);
+    m_traySpliter->setFixedSize(0,0);
 
 
     // when size or new item in , resizeLayout
@@ -245,7 +242,7 @@ void MainPanelControl::updateMainPanelLayout()
  */
 void MainPanelControl::addFixedAreaItem(int index, QWidget *wdg)
 {
-    if(m_position == Position::Top || m_position == Position::Bottom) {
+    if(m_position == Position::Top || m_position == Position::Bottom){
         wdg->setMaximumSize(height(),height());
     } else {
         wdg->setMaximumSize(width(),width());
@@ -387,6 +384,7 @@ void MainPanelControl::setPositonValue(Dock::Position position)
 {
     if (m_position == position)
         return;
+
     m_position = position;
     m_overflowBtn->setLayoutPosition(position);
     QTimer::singleShot(0, this, &MainPanelControl::updateMainPanelLayout);

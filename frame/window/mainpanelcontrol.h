@@ -102,9 +102,6 @@ private:
     QSize m_pluginareaSize = QSize(0, 0);
 
 private:
-    OverflowItem *m_overflowBtn;
-    QBoxLayout *m_overflowAreaLayout; // overflow layout
-
     QBoxLayout *m_mainPanelLayout;
 
     QWidget *m_fixedAreaWidget;      // 固定区域
@@ -116,9 +113,11 @@ private:
     QBoxLayout *m_appAreaSonLayout;  //
     QLabel *m_appSpliter;            // 应用区域与托盘区域间的分割线
 
-    QWidget *m_appOverflowWidget;
+    QWidget *m_appOverflowWidget;    // 溢出区域
     QBoxLayout *m_appOverflowLayout;
-    QLabel *m_overflowSpliter;
+    OverflowItem *m_overflowBtn;     // 溢出按钮
+    QBoxLayout *m_overflowAreaLayout;// 
+    QLabel *m_overflowSpliter;       // 溢出区域和应用区域分割线
 
     QWidget *m_trayAreaWidget;       // 托盘区域
     QBoxLayout *m_trayAreaLayout;    //
