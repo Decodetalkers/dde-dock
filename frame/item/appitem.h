@@ -50,7 +50,7 @@ signals:
     void dragReady(QWidget *dragWidget);
     void requestUpdateEntryGeometries() const;
     void requestUpdateItemMinimizedGeometry(const QRect) const;
-
+    void requestActive();
 private:
     void moveEvent(QMoveEvent *e) override;
     void paintEvent(QPaintEvent *e) override;
@@ -92,7 +92,6 @@ private:
     const QGSettings *m_appSettings;
     const QGSettings *m_activeAppSettings;
     const QGSettings *m_dockedAppSettings;
-    const QDBusObjectPath m_daemonObjectPath;
 
     PreviewContainer *m_appPreviewTips;
     DockEntryInter *m_itemEntryInter;

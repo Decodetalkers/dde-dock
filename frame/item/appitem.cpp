@@ -37,7 +37,6 @@ AppItem::AppItem(const QGSettings *appSettings, const QGSettings *activeAppSetti
     , m_appSettings(appSettings)
     , m_activeAppSettings(activeAppSettings)
     , m_dockedAppSettings(dockedAppSettings)
-    , m_daemonObjectPath(entry)
     , m_appPreviewTips(nullptr)
     , m_itemEntryInter(new DockEntryInter("com.deepin.dde.daemon.Dock", entry.path(), QDBusConnection::sessionBus(), this))
     , m_swingEffectView(nullptr)
@@ -573,6 +572,9 @@ void AppItem::onResetPreview()
 void AppItem::activeChanged()
 {
     m_active = !m_active;
+    if (isActive()) {
+        emit requestActive();
+    }
 }
 
 void AppItem::showPreview()

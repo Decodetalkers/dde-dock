@@ -11,6 +11,7 @@
 
 QT_USE_NAMESPACE
 class QScrollArea;
+class QPushButton;
 class QBoxLayout;
 
 class OverflowItem : public DockItem
@@ -32,19 +33,31 @@ protected:
     bool eventFilter(QObject *watched, QEvent *e) override;
 private:
     void paintEvent(QPaintEvent *e) override;
-    //QWidget * popupTips() override;
     void showPopupWindow(QWidget *const content, const bool model = false, const int radius = 6) override;
 
 private:
     QPoint OverflowIconPosition(const QPixmap &pixmap) const;
+    void initUI();
+    void initSlots();
+    void setbtnsVisible();
+    void setbtnsShape();
+
+// status
 private:
+    int m_width;
     bool m_clicked;
     bool m_hover;
     bool m_showpopup;
+
+// widgets
+private:
     QScrollArea *m_scrollarea;
     QWidget *m_centerScroll;
     QBoxLayout *m_popuplayout;
     DockPopupWindow *m_popupwindow;
+    QBoxLayout *m_popupbtnslayout;
+    QPushButton *m_left;
+    QPushButton *m_right;
 };
 
 #endif // !OVERFLOWITEM_H

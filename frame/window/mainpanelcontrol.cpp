@@ -107,6 +107,12 @@ MainPanelControl::MainPanelControl(QWidget *parent)
     connect(DockItemManager::instance(), &DockItemManager::itemRemoved, this, [this]{
         m_overflowBtn->hidePopUpWindow();
     });
+
+    connect(DockItemManager::instance(), &DockItemManager::requestUpdateActiveApp, this, [this]{
+        m_overflowBtn->hidePopUpWindow();
+        resizeLayout();
+        update();
+    });
 }
 
 void MainPanelControl::initUI()
@@ -1022,10 +1028,7 @@ void MainPanelControl::paintEvent(QPaintEvent *event)
     painter.fillRect(m_fixedSpliter->geometry(), color);
     painter.fillRect(m_appSpliter->geometry(), color);
     painter.fillRect(m_traySpliter->geometry(), color);
-    //if (m_overflowSpliter->isEnabled()) {
-    // TODO: hide it when not show
     painter.fillRect(m_overflowSpliter->geometry(), color);
-    //}
 }
 
 void MainPanelControl::resizeDockIcon()
@@ -1217,6 +1220,7 @@ void MainPanelControl::resizeLayout() {
     } else {
         m_overflowBtn->setVisible(false);
     }
+
 }
 
 void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int showtype, int traySize)
