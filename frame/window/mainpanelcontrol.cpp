@@ -245,15 +245,14 @@ void MainPanelControl::updateMainPanelLayout()
  */
 void MainPanelControl::addFixedAreaItem(int index, QWidget *wdg)
 {
-    if (m_position == Position::Top || m_position == Position::Bottom) {
-        wdg->setMaximumSize(height(), height());
+    if(m_position == Position::Top || m_position == Position::Bottom) {
+        wdg->setMaximumSize(height(),height());
     } else {
-        wdg->setMaximumSize(width(), width());
+        wdg->setMaximumSize(width(),width());
     }
     m_fixedAreaLayout->insertWidget(index, wdg);
 }
 
-// TODO: changes needed
 /**往应用区域添加应用
  * @brief MainPanelControl::addAppAreaItem
  * @param index　位置索引，如果为负数则插入到最后，为正则插入到指定位置
@@ -261,10 +260,10 @@ void MainPanelControl::addFixedAreaItem(int index, QWidget *wdg)
  */
 void MainPanelControl::addAppAreaItem(int index, QWidget *wdg)
 {
-    if (m_position == Position::Top || m_position == Position::Bottom) {
-        wdg->setMaximumSize(height(), height());
+    if(m_position == Position::Top || m_position == Position::Bottom) {
+        wdg->setMaximumSize(height(),height());
     } else {
-        wdg->setMaximumSize(width(), width());
+        wdg->setMaximumSize(width(),width());
     }
     m_appAreaSonLayout->insertWidget(index, wdg);
 }
@@ -332,9 +331,9 @@ void MainPanelControl::removeTrayAreaItem(QWidget *wdg)
  */
 void MainPanelControl::removePluginAreaItem(QWidget *wdg)
 {
-    // 因为日期时间插件大小和其他插件有异，为了方便设置边距，各插件中增加一层布局
-    // 因此remove插件图标时，需要从多的一层布局中取widget进行判断是否需要移除的插件
-    //  清空保存的垃圾箱插件指针
+    //因为日期时间插件大小和其他插件有异，为了方便设置边距，各插件中增加一层布局
+    //因此remove插件图标时，需要从多的一层布局中取widget进行判断是否需要移除的插件
+    // 清空保存的垃圾箱插件指针
     PluginsItem *pluginsItem = qobject_cast<PluginsItem *>(wdg);
     if (pluginsItem && pluginsItem->pluginName() == "trash")
         m_trashItem = nullptr;
@@ -353,9 +352,9 @@ void MainPanelControl::removePluginAreaItem(QWidget *wdg)
 
 void MainPanelControl::resizeEvent(QResizeEvent *event)
 {
-    // 先通过消息循环让各部件调整好size后再计算图标大小
-    // 避免因为部件size没有调整完导致计算的图标大小不准确
-    // 然后重复触发m_pluginAreaWidget的reszie事件并重复计算，造成任务栏图标抖动问题
+    //先通过消息循环让各部件调整好size后再计算图标大小
+    //避免因为部件size没有调整完导致计算的图标大小不准确
+    //然后重复触发m_pluginAreaWidget的reszie事件并重复计算，造成任务栏图标抖动问题
     QWidget::resizeEvent(event);
     resizeDesktopWidget();
     resizeDockIcon();
@@ -417,7 +416,7 @@ void MainPanelControl::insertItem(int index, DockItem *item)
         addAppAreaItem(index, item);
         resizeLayout();
         break;
-    case DockItem::TrayPlugin:  // 此处只会有一个tray系统托盘插件，微信、声音、网络蓝牙等等，都在系统托盘插件中处理的
+    case DockItem::TrayPlugin: // 此处只会有一个tray系统托盘插件，微信、声音、网络蓝牙等等，都在系统托盘插件中处理的
         addTrayAreaItem(index, item);
         break;
     case DockItem::Plugins:
@@ -503,8 +502,8 @@ int MainPanelControl::getItemIndex(DockItem *targetItem) const
         return m_appAreaSonLayout->indexOf(targetItem);
 
     if (targetItem->itemType() == DockItem::Plugins) {
-        // 因为日期时间插件大小和其他插件大小有异，为了设置边距，在各插件中增加了一层布局
-        // 因此有拖动图标时，需要从多的一层布局中判断是否相同插件而获取插件位置顺序
+        //因为日期时间插件大小和其他插件大小有异，为了设置边距，在各插件中增加了一层布局
+        //因此有拖动图标时，需要从多的一层布局中判断是否相同插件而获取插件位置顺序
         for (int i = 0; i < m_pluginLayout->count(); ++i) {
             QLayout *layout = m_pluginLayout->itemAt(i)->layout();
             if (layout && layout->itemAt(0)->widget() == targetItem) {
@@ -521,7 +520,7 @@ int MainPanelControl::getItemIndex(DockItem *targetItem) const
 
 void MainPanelControl::dragEnterEvent(QDragEnterEvent *e)
 {
-    // 拖拽图标到任务栏时，如果拖拽到垃圾箱插件图标widget上，则默认不允许拖拽，其他位置默认为允许拖拽
+    //拖拽图标到任务栏时，如果拖拽到垃圾箱插件图标widget上，则默认不允许拖拽，其他位置默认为允许拖拽
     QWidget *widget = QApplication::widgetAt(QCursor::pos());
     //"trash-centralwidget"名称是在PluginsItem类中m_centralWidget->setObjectName(pluginInter->pluginName() + "-centralwidget");
     if (widget && widget->objectName() == "trash-centralwidget") {
@@ -652,9 +651,9 @@ void MainPanelControl::dragMoveEvent(QDragMoveEvent *e)
         return;
     }
 
-    // 如果当前从桌面拖拽的的app是trash，则不能放入app任务栏中
+    //如果当前从桌面拖拽的的app是trash，则不能放入app任务栏中
     QString str = "file://";
-    // 启动器
+    //启动器
     QString str_t = "";
 
     str.append(QStandardPaths::locate(QStandardPaths::DesktopLocation, "dde-trash.desktop"));
@@ -790,7 +789,7 @@ void MainPanelControl::startDrag(DockItem *dockItem)
 
         if (Utils::IS_WAYLAND_DISPLAY) {
             m_dragIndex = getItemIndex(dockItem);
-            connect(m_appDragWidget, &AppDragWidget::requestRemoveSelf, this, [=](bool needDelete) {
+            connect(m_appDragWidget, &AppDragWidget::requestRemoveSelf, this, [ = ](bool needDelete) {
                 m_appDragWidget = nullptr;
                 if (!item.isNull() && qobject_cast<AppItem *>(item)->isValid()) {
                     if (m_dragIndex > -1 && !needDelete) {
@@ -809,7 +808,7 @@ void MainPanelControl::startDrag(DockItem *dockItem)
                 }
             });
         } else {
-            connect(m_appDragWidget, &AppDragWidget::destroyed, this, [=] {
+            connect(m_appDragWidget, &AppDragWidget::destroyed, this, [ = ] {
                 m_appDragWidget = nullptr;
                 if (!item.isNull() && qobject_cast<AppItem *>(item)->isValid()) {
                     if (-1 == m_appAreaSonLayout->indexOf(item) && m_dragIndex != -1) {
@@ -822,7 +821,7 @@ void MainPanelControl::startDrag(DockItem *dockItem)
             });
         }
 
-        connect(m_appDragWidget, &AppDragWidget::requestRemoveItem, this, [=] {
+        connect(m_appDragWidget, &AppDragWidget::requestRemoveItem, this, [ = ] {
             if (-1 != m_appAreaSonLayout->indexOf(item)) {
                 m_dragIndex = m_appAreaSonLayout->indexOf(item);
                 removeItem(item);
@@ -900,7 +899,7 @@ DockItem *MainPanelControl::dropTargetItem(DockItem *sourceItem, QPoint point)
 
     DockItem *targetItem = nullptr;
 
-    for (int i = 0; i < parentLayout->count(); ++i) {
+    for (int i = 0; i < parentLayout->count(); ++ i) {
         QLayoutItem *layoutItem = parentLayout->itemAt(i);
 
         DockItem *dockItem = nullptr;
@@ -909,7 +908,7 @@ DockItem *MainPanelControl::dropTargetItem(DockItem *sourceItem, QPoint point)
             if (layout) {
                 dockItem = qobject_cast<DockItem *>(layout->itemAt(0)->widget());
             }
-        } else {
+        } else{
             dockItem = qobject_cast<DockItem *>(layoutItem->widget());
         }
 
@@ -1030,6 +1029,9 @@ void MainPanelControl::paintEvent(QPaintEvent *event)
     painter.fillRect(m_overflowSpliter->geometry(), color);
 }
 
+/**重新计算任务栏上应用图标、插件图标的大小，并设置
+ * @brief MainPanelControl::resizeDockIcon
+ */
 void MainPanelControl::resizeDockIcon()
 {
     // 总宽度
