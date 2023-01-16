@@ -3,47 +3,46 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "mainpanelcontrol.h"
-#include "appitem.h"
-#include "components/appdrag.h"
-#include "constants.h"
-#include "desktop_widget.h"
 #include "dockitem.h"
-#include "dockitemmanager.h"
-#include "imageutil.h"
 #include "overflowitem.h"
+#include "placeholderitem.h"
+#include "components/appdrag.h"
+#include "appitem.h"
 #include "pluginsitem.h"
-#include "touchsignalmanager.h"
 #include "traypluginitem.h"
+#include "dockitemmanager.h"
+#include "touchsignalmanager.h"
 #include "utils.h"
+#include "desktop_widget.h"
+#include "imageutil.h"
 
-#include <QSizePolicy>
-#include <QApplication>
-#include <QBoxLayout>
 #include <QDrag>
-#include <QLabel>
-#include <QPixmap>
-#include <QPointer>
+#include <QTimer>
 #include <QStandardPaths>
 #include <QString>
-#include <QTimer>
-#include <QScrollBar>
+#include <QApplication>
+#include <QPointer>
+#include <QBoxLayout>
+#include <QLabel>
+#include <QPixmap>
+#include <QBoxLayout>
 #include <QtConcurrent/QtConcurrentRun>
-#include <qpa/qplatformintegration.h>
 #include <qpa/qplatformnativeinterface.h>
+#include <qpa/qplatformintegration.h>
 #define protected public
 #include <QtGui/private/qsimpledrag_p.h>
 #undef protected
-#include <QtGui/private/qguiapplication_p.h>
 #include <QtGui/private/qshapedpixmapdndwindow_p.h>
+#include <QtGui/private/qguiapplication_p.h>
 
 #include <DGuiApplicationHelper>
 #include <DWindowManagerHelper>
-#include <DIconButton>
+
 #define SPLITER_SIZE 2
 #define TRASH_MARGIN 20
-#define PLUGIN_MAX_SIZE 40
-#define PLUGIN_MIN_SIZE 20
-#define DESKTOP_SIZE 10
+#define PLUGIN_MAX_SIZE  40
+#define PLUGIN_MIN_SIZE  20
+#define DESKTOP_SIZE  10
 
 DWIDGET_USE_NAMESPACE
 
@@ -198,38 +197,38 @@ void MainPanelControl::setDisplayMode(DisplayMode dislayMode)
 void MainPanelControl::updateMainPanelLayout()
 {
     switch (m_position) {
-        case Position::Top:
-        case Position::Bottom:
-            m_fixedAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-            m_appOverflowWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-            m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-            m_trayAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
-            m_mainPanelLayout->setDirection(QBoxLayout::LeftToRight);
-            m_fixedAreaLayout->setDirection(QBoxLayout::LeftToRight);
-            m_appOverflowLayout->setDirection(QBoxLayout::LeftToRight);
-            m_pluginLayout->setDirection(QBoxLayout::LeftToRight);
-            m_trayAreaLayout->setDirection(QBoxLayout::LeftToRight);
-            m_appAreaSonLayout->setDirection(QBoxLayout::LeftToRight);
-            m_trayAreaLayout->setContentsMargins(0, 10, 0, 10);
-            m_pluginLayout->setContentsMargins(10, 0, 10, 0);
-            break;
-        case Position::Right:
-        case Position::Left:
-            m_fixedAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            m_appOverflowWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-            m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
-            m_trayAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
-            m_mainPanelLayout->setDirection(QBoxLayout::TopToBottom);
-            m_fixedAreaLayout->setDirection(QBoxLayout::TopToBottom);
-            m_appOverflowLayout->setDirection(QBoxLayout::TopToBottom);
-            m_pluginLayout->setDirection(QBoxLayout::TopToBottom);
-            m_trayAreaLayout->setDirection(QBoxLayout::TopToBottom);
-            m_appAreaSonLayout->setDirection(QBoxLayout::TopToBottom);
-            m_trayAreaLayout->setContentsMargins(10, 0, 10, 0);
-            m_pluginLayout->setContentsMargins(0, 10, 0, 10);
-            break;
+    case Position::Top:
+    case Position::Bottom:
+        m_fixedAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        m_appOverflowWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        m_trayAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+        m_mainPanelLayout->setDirection(QBoxLayout::LeftToRight);
+        m_fixedAreaLayout->setDirection(QBoxLayout::LeftToRight);
+        m_appOverflowLayout->setDirection(QBoxLayout::LeftToRight);
+        m_pluginLayout->setDirection(QBoxLayout::LeftToRight);
+        m_trayAreaLayout->setDirection(QBoxLayout::LeftToRight);
+        m_appAreaSonLayout->setDirection(QBoxLayout::LeftToRight);
+        m_trayAreaLayout->setContentsMargins(0, 10, 0, 10);
+        m_pluginLayout->setContentsMargins(10, 0, 10, 0);
+        break;
+    case Position::Right:
+    case Position::Left:
+        m_fixedAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        m_appOverflowWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        m_appAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+        m_pluginAreaWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+        m_trayAreaWidget->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+        m_mainPanelLayout->setDirection(QBoxLayout::TopToBottom);
+        m_fixedAreaLayout->setDirection(QBoxLayout::TopToBottom);
+        m_appOverflowLayout->setDirection(QBoxLayout::TopToBottom);
+        m_pluginLayout->setDirection(QBoxLayout::TopToBottom);
+        m_trayAreaLayout->setDirection(QBoxLayout::TopToBottom);
+        m_appAreaSonLayout->setDirection(QBoxLayout::TopToBottom);
+        m_trayAreaLayout->setContentsMargins(10, 0, 10, 0);
+        m_pluginLayout->setContentsMargins(0, 10, 0, 10);
+        break;
     }
 
     // 显示桌面的区域
@@ -407,25 +406,25 @@ void MainPanelControl::insertItem(int index, DockItem *item)
     item->installEventFilter(this);
 
     switch (item->itemType()) {
-        case DockItem::Launcher:
-            addFixedAreaItem(0, item);
-            break;
-        case DockItem::FixedPlugin:
-            addFixedAreaItem(index, item);
-            break;
-        case DockItem::App:
-        case DockItem::Placeholder:
-            addAppAreaItem(index, item);
-            resizeLayout();
-            break;
-        case DockItem::TrayPlugin:  // 此处只会有一个tray系统托盘插件，微信、声音、网络蓝牙等等，都在系统托盘插件中处理的
-            addTrayAreaItem(index, item);
-            break;
-        case DockItem::Plugins:
-            addPluginAreaItem(index, item);
-            break;
-        default:
-            break;
+    case DockItem::Launcher:
+        addFixedAreaItem(0, item);
+        break;
+    case DockItem::FixedPlugin:
+        addFixedAreaItem(index, item);
+        break;
+    case DockItem::App:
+    case DockItem::Placeholder:
+        addAppAreaItem(index, item);
+        resizeLayout();
+        break;
+    case DockItem::TrayPlugin:  // 此处只会有一个tray系统托盘插件，微信、声音、网络蓝牙等等，都在系统托盘插件中处理的
+        addTrayAreaItem(index, item);
+        break;
+    case DockItem::Plugins:
+        addPluginAreaItem(index, item);
+        break;
+    default:
+        break;
     }
 
     // 同removeItem处 注意:不能屏蔽此接口，否则会造成插件插入时无法显示
@@ -443,22 +442,22 @@ void MainPanelControl::insertItem(int index, DockItem *item)
 void MainPanelControl::removeItem(DockItem *item)
 {
     switch (item->itemType()) {
-        case DockItem::Launcher:
-        case DockItem::FixedPlugin:
-            removeFixedAreaItem(item);
-            break;
-        case DockItem::App:
-        case DockItem::Placeholder:
-            removeAppAreaItem(item);
-            break;
-        case DockItem::TrayPlugin:
-            removeTrayAreaItem(item);
-            break;
-        case DockItem::Plugins:
-            removePluginAreaItem(item);
-            break;
-        default:
-            break;
+    case DockItem::Launcher:
+    case DockItem::FixedPlugin:
+        removeFixedAreaItem(item);
+        break;
+    case DockItem::App:
+    case DockItem::Placeholder:
+        removeAppAreaItem(item);
+        break;
+    case DockItem::TrayPlugin:
+        removeTrayAreaItem(item);
+        break;
+    case DockItem::Plugins:
+        removePluginAreaItem(item);
+        break;
+    default:
+        break;
     }
 
     item->removeEventFilter(this);
@@ -679,27 +678,27 @@ bool MainPanelControl::eventFilter(QObject *watched, QEvent *event)
     // 更新应用区域大小和任务栏图标大小
     if (watched == m_appAreaSonWidget) {
         switch (event->type()) {
-            case QEvent::LayoutRequest:
-                m_appAreaSonWidget->adjustSize();
-                resizeDockIcon();
-                break;
-            case QEvent::Resize:
-                resizeDockIcon();
-                break;
-            default:
-                moveAppSonWidget();
-                break;
+        case QEvent::LayoutRequest:
+            m_appAreaSonWidget->adjustSize();
+            resizeDockIcon();
+            break;
+        case QEvent::Resize:
+            resizeDockIcon();
+            break;
+        default:
+            moveAppSonWidget();
+            break;
         }
     }
 
     // fix:88133 在计算icon大小时m_pluginAreaWidget的数据错误
     if (watched == m_pluginAreaWidget) {
         switch (event->type()) {
-            case QEvent::Resize:
-                resizeDockIcon();
-                break;
-            default:
-                break;
+        case QEvent::Resize:
+            resizeDockIcon();
+            break;
+        default:
+            break;
         }
     }
 
@@ -879,17 +878,17 @@ DockItem *MainPanelControl::dropTargetItem(DockItem *sourceItem, QPoint point)
 
     if (sourceItem) {
         switch (sourceItem->itemType()) {
-            case DockItem::App:
-                parentWidget = m_appAreaSonWidget;
-                break;
-            case DockItem::Plugins:
-                parentWidget = m_pluginAreaWidget;
-                break;
-            case DockItem::FixedPlugin:
-                parentWidget = m_fixedAreaWidget;
-                break;
-            default:
-                break;
+        case DockItem::App:
+            parentWidget = m_appAreaSonWidget;
+            break;
+        case DockItem::Plugins:
+            parentWidget = m_pluginAreaWidget;
+            break;
+        case DockItem::FixedPlugin:
+            parentWidget = m_fixedAreaWidget;
+            break;
+        default:
+            break;
         }
     }
 
@@ -946,37 +945,37 @@ void MainPanelControl::moveAppSonWidget()
     QRect rect(QPoint(0, 0), m_appAreaSonWidget->size());
     if (DisplayMode::Efficient == m_dislayMode) {
         switch (m_position) {
-            case Top:
-            case Bottom:
-                rect.moveTo(m_appAreaWidget->pos());
-                break;
-            case Right:
-            case Left:
-                rect.moveTo(m_appAreaWidget->pos());
-                break;
+        case Top:
+        case Bottom:
+            rect.moveTo(m_appAreaWidget->pos());
+            break;
+        case Right:
+        case Left:
+            rect.moveTo(m_appAreaWidget->pos());
+            break;
         }
     } else {
         switch (m_position) {
-            case Top:
-            case Bottom:
-                rect.moveCenter(this->rect().center());
-                if (rect.right() > m_appAreaWidget->geometry().right()) {
-                    rect.moveRight(m_appAreaWidget->geometry().right());
-                }
-                if (rect.left() < m_appAreaWidget->geometry().left()) {
-                    rect.moveLeft(m_appAreaWidget->geometry().left());
-                }
-                break;
-            case Right:
-            case Left:
-                rect.moveCenter(this->rect().center());
-                if (rect.bottom() > m_appAreaWidget->geometry().bottom()) {
-                    rect.moveBottom(m_appAreaWidget->geometry().bottom());
-                }
-                if (rect.top() < m_appAreaWidget->geometry().top()) {
-                    rect.moveTop(m_appAreaWidget->geometry().top());
-                }
-                break;
+        case Top:
+        case Bottom:
+            rect.moveCenter(this->rect().center());
+            if (rect.right() > m_appAreaWidget->geometry().right()) {
+                rect.moveRight(m_appAreaWidget->geometry().right());
+            }
+            if (rect.left() < m_appAreaWidget->geometry().left()) {
+                rect.moveLeft(m_appAreaWidget->geometry().left());
+            }
+            break;
+        case Right:
+        case Left:
+            rect.moveCenter(this->rect().center());
+            if (rect.bottom() > m_appAreaWidget->geometry().bottom()) {
+                rect.moveBottom(m_appAreaWidget->geometry().bottom());
+            }
+            if (rect.top() < m_appAreaWidget->geometry().top()) {
+                rect.moveTop(m_appAreaWidget->geometry().top());
+            }
+            break;
         }
     }
 
@@ -1208,14 +1207,14 @@ void MainPanelControl::resizeLayout() {
             m_overflowBtn->setVisible(false);
         }
         switch (m_position) {
-            case Dock::Left:
-            case Dock::Right:
-                m_overflowBtn->setPopUpSize(m_appItemSize * 1.4, realheight);
-                break;
-            case Dock::Top:
-            case Dock::Bottom:
-                m_overflowBtn->setPopUpSize(realwidth, m_appItemSize * 1.4);
-                break;
+        case Dock::Left:
+        case Dock::Right:
+            m_overflowBtn->setPopUpSize(m_appItemSize * 1.4, realheight);
+            break;
+        case Dock::Top:
+        case Dock::Bottom:
+            m_overflowBtn->setPopUpSize(realwidth, m_appItemSize * 1.4);
+            break;
         }
     } else {
         m_overflowBtn->setVisible(false);
