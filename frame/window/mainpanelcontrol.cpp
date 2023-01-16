@@ -260,7 +260,7 @@ void MainPanelControl::addFixedAreaItem(int index, QWidget *wdg)
  */
 void MainPanelControl::addAppAreaItem(int index, QWidget *wdg)
 {
-    if(m_position == Position::Top || m_position == Position::Bottom) {
+    if(m_position == Position::Top || m_position == Position::Bottom){
         wdg->setMaximumSize(height(),height());
     } else {
         wdg->setMaximumSize(width(),width());
@@ -286,9 +286,9 @@ void MainPanelControl::addTrayAreaItem(int index, QWidget *wdg)
  */
 void MainPanelControl::addPluginAreaItem(int index, QWidget *wdg)
 {
-    // 因为日期时间插件和其他插件的大小有异，为了方便设置边距，在插件区域布局再添加一层布局设置边距
-    // 因此在处理插件图标时，需要通过两层布局判断是否为需要的插件，例如拖动插件位置等判断
-    QBoxLayout *boxLayout = new QBoxLayout(QBoxLayout::LeftToRight, this);
+    //因为日期时间插件和其他插件的大小有异，为了方便设置边距，在插件区域布局再添加一层布局设置边距
+    //因此在处理插件图标时，需要通过两层布局判断是否为需要的插件，例如拖动插件位置等判断
+    QBoxLayout * boxLayout = new QBoxLayout(QBoxLayout::LeftToRight, this);
     boxLayout->addWidget(wdg, 0, Qt::AlignCenter);
     m_pluginLayout->insertLayout(index, boxLayout, 0);
 
@@ -899,7 +899,7 @@ DockItem *MainPanelControl::dropTargetItem(DockItem *sourceItem, QPoint point)
 
     DockItem *targetItem = nullptr;
 
-    for (int i = 0; i < parentLayout->count(); ++ i) {
+    for (int i = 0 ; i < parentLayout->count(); ++i) {
         QLayoutItem *layoutItem = parentLayout->itemAt(i);
 
         DockItem *dockItem = nullptr;
@@ -945,7 +945,7 @@ void MainPanelControl::moveAppSonWidget()
     if (DisplayMode::Efficient == m_dislayMode) {
         switch (m_position) {
         case Top:
-        case Bottom:
+        case Bottom :
             rect.moveTo(m_appAreaWidget->pos());
             break;
         case Right:
@@ -956,7 +956,7 @@ void MainPanelControl::moveAppSonWidget()
     } else {
         switch (m_position) {
         case Top:
-        case Bottom:
+        case Bottom :
             rect.moveCenter(this->rect().center());
             if (rect.right() > m_appAreaWidget->geometry().right()) {
                 rect.moveRight(m_appAreaWidget->geometry().right());
@@ -1054,7 +1054,7 @@ void MainPanelControl::resizeDockIcon()
 
     // 因为日期时间大小和其他插件大小有异，为了设置边距，在各插件中增加了一层布局
     // 因此需要通过多一层布局来获取各插件
-    for (int i = 0; i < m_pluginLayout->count(); ++i) {
+    for (int i = 0; i < m_pluginLayout->count(); ++ i) {
         QLayout *layout = m_pluginLayout->itemAt(i)->layout();
         if (layout) {
             PluginsItem *w = static_cast<PluginsItem *>(layout->itemAt(0)->widget());
@@ -1261,11 +1261,11 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         m_tray->centralWidget()->setProperty("iconSize", traySize);
     }
 
-    // 因为日期时间大小和其他插件大小有异，为了设置边距，在各插件中增加了一层布局
-    // 因此需要通过多一层布局来获取各插件
+    //因为日期时间大小和其他插件大小有异，为了设置边距，在各插件中增加了一层布局
+    //因此需要通过多一层布局来获取各插件
     if ((m_position == Position::Top) || (m_position == Position::Bottom)) {
         // 三方插件
-        for (int i = 0; i < m_pluginLayout->count(); ++i) {
+        for (int i = 0; i < m_pluginLayout->count(); ++ i) {
             QLayout *layout = m_pluginLayout->itemAt(i)->layout();
             if (layout && layout->itemAt(0)) {
                 PluginsItem *pItem = static_cast<PluginsItem *>(layout->itemAt(0)->widget());
@@ -1280,8 +1280,8 @@ void MainPanelControl::calcuDockIconSize(int appItemSize, int maxcount, int show
         }
     } else {
         // 三方插件
-        for (int i = 0; i < m_pluginLayout->count(); ++i) {
-            QLayout *layout = m_pluginLayout->itemAt(i)->layout();
+        for (int i = 0; i < m_pluginLayout->count(); ++ i) {
+            QLayout *layout =  m_pluginLayout->itemAt(i)->layout();
             if (layout) {
                 PluginsItem *pItem = static_cast<PluginsItem *>(layout->itemAt(0)->widget());
                 if (pItem) {
