@@ -5,15 +5,21 @@
 #ifndef OVERFLOWITEM_H
 #define OVERFLOWITEM_H
 
-#include <QWidget>
 #include "dockitem.h"
 
+#include <QWidget>
+#include <DWidget>
 
 QT_USE_NAMESPACE
 class QScrollArea;
 class QPushButton;
 class QBoxLayout;
 
+DWIDGET_BEGIN_NAMESPACE
+class DIconButton;
+DWIDGET_END_NAMESPACE
+
+DWIDGET_USE_NAMESPACE
 class OverflowItem : public DockItem
 {
     Q_OBJECT
@@ -46,7 +52,6 @@ private:
 private:
     int m_width;
     bool m_clicked;
-    bool m_hover;
     bool m_showpopup;
 
 // widgets
@@ -56,8 +61,8 @@ private:
     QBoxLayout *m_popuplayout;
     DockPopupWindow *m_popupwindow;
     QBoxLayout *m_popupbtnslayout;
-    QPushButton *m_left;
-    QPushButton *m_right;
+    DIconButton *m_left;
+    DIconButton *m_right;
 };
 
 #endif // !OVERFLOWITEM_H

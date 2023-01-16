@@ -13,7 +13,6 @@
 using namespace Dock;
 
 DWIDGET_BEGIN_NAMESPACE
-class DArrowRectangle;
 class DIconButton;
 DWIDGET_END_NAMESPACE
 
@@ -94,12 +93,13 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
     void paintEvent(QPaintEvent *event) override;
 
+// state
 private:
     int m_maxcount = -1;
     int m_showtype = -1;
     int m_appItemSize = 0;
-    QSize m_trayareaSize = QSize(0,0);
-    QSize m_pluginareaSize = QSize(0,0);
+    QSize m_trayareaSize = QSize(0, 0);
+    QSize m_pluginareaSize = QSize(0, 0);
 
 private:
     OverflowItem *m_overflowBtn;

@@ -1,4 +1,9 @@
+// SPDX-FileCopyrightText: 2011 - 2022 UnionTech Software Technology Co., Ltd.
+//
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "overflowitem.h"
+#include "diconbutton.h"
 #include "itemconsts.h"
 #include "appitem.h"
 
@@ -25,15 +30,14 @@ OverflowItem::OverflowItem(QWidget *parent)
     : DockItem(parent)
     , m_width(0)
     , m_clicked(false)
-    , m_hover(false)
     , m_showpopup(false)
     , m_scrollarea(new QScrollArea)
     , m_centerScroll(new QWidget)
     , m_popuplayout(new QBoxLayout(QBoxLayout::LeftToRight))
     , m_popupwindow(new DockPopupWindow)
     , m_popupbtnslayout(new QBoxLayout(QBoxLayout::LeftToRight, m_scrollarea))
-    , m_left(new QPushButton)
-    , m_right(new QPushButton)
+    , m_left(new DIconButton)
+    , m_right(new DIconButton)
 {
     initUI();
     initSlots();
@@ -285,23 +289,19 @@ void OverflowItem::mousePressEvent(QMouseEvent *e) {
 }
 
 void OverflowItem::mouseMoveEvent(QMouseEvent *e) {
-    m_hover = true;
     DockItem::mouseMoveEvent(e);
 }
 
 void OverflowItem::mouseReleaseEvent(QMouseEvent *e) {
-    m_hover = false;
     m_clicked = false;
     DockItem::mouseReleaseEvent(e);
 }
 
 void OverflowItem::enterEvent(QEvent *e) {
-    m_hover = true;
     DockItem::enterEvent(e);
 }
 
 void OverflowItem::leaveEvent(QEvent *e) {
-    m_hover = false;
     m_clicked = false;
     DockItem::leaveEvent(e);
 }
