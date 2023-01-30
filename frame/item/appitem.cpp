@@ -3,6 +3,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "appitem.h"
+#include "itemconsts.h"
 #include "themeappicon.h"
 #include "xcb_misc.h"
 #include "appswingeffectbuilder.h"
@@ -351,9 +352,17 @@ void AppItem::wheelEvent(QWheelEvent *e)
 
     QWidget::wheelEvent(e);
 
-    if (qAbs(e->angleDelta().y()) > 20) {
-        m_itemEntryInter->PresentWindows();
+    if (this->parent() != nullptr) {
+        QString parentaccessname = static_cast<QWidget *>(this->parent())->accessibleName();
+        if (qAbs(e->angleDelta().y()) > 20 && parentaccessname != OVERFLOWWIDGET_ACCESS_NAME) {
+            m_itemEntryInter->PresentWindows();
+        }
+    } else {
+        if (qAbs(e->angleDelta().y()) > 20) {
+            m_itemEntryInter->PresentWindows();
+        }
     }
+
 }
 
 void AppItem::resizeEvent(QResizeEvent *e)
@@ -489,7 +498,11 @@ QPoint AppItem::appIconPosition() const
 void AppItem::updateWindowInfos(const WindowInfoMap &info)
 {
     m_windowInfos = info;
-    m_currentWindowId = info.firstKey();
+
+    // check info size, check if firstKey is exist
+    if (info.size() > 0) {
+        m_currentWindowId = info.firstKey();
+    }
     if (m_appPreviewTips)
         m_appPreviewTips->setWindowInfos(m_windowInfos, m_itemEntryInter->GetAllowedCloseWindows().value());
     m_updateIconGeometryTimer->start();
@@ -570,6 +583,9 @@ void AppItem::onResetPreview()
 void AppItem::activeChanged()
 {
     m_active = !m_active;
+    if (isActive()) {
+        emit requestActive();
+    }
 }
 
 void AppItem::showPreview()
@@ -707,4 +723,8 @@ void AppItem::showEvent(QShowEvent *e)
     });
 
     refreshIcon();
+}
+
+bool AppItem::isActive() const {
+    return hasAttention() || m_active;
 }
